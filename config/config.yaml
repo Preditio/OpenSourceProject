@@ -130,12 +130,17 @@ rss:
     # ── 美国主流媒体与监管（英文）───────────────────────────────
     - id: "whitehouse"
       name: "White House"
-      url: "https://www.whitehouse.gov/feed/"
+      url: "https://www.whitehouse.gov/news/feed/"
       max_age_days: 30
 
     - id: "whitehouse-briefing"
       name: "White House Briefing Room"
-      url: "https://www.whitehouse.gov/briefing-room/feed/"
+      url: "https://www.whitehouse.gov/briefings-statements/feed/"
+      max_age_days: 30
+
+    - id: "congress-gov"
+      name: "Congress.gov Notifications"
+      url: "https://www.congress.gov/rss/notification.xml"
       max_age_days: 30
 
     - id: "wsj-world"
@@ -166,6 +171,7 @@ rss:
     - id: "ap-top"
       name: "Associated Press - Top News"
       url: "https://feeds.apnews.com/apf-topnews"
+      enabled: false                  # AP News 已不再提供 RSS
       max_age_days: 30
 
     # ── 英国主流媒体（英文）────────────────────────────────────
@@ -186,7 +192,7 @@ rss:
 
     - id: "the-times-uk"
       name: "The Times (UK)"
-      url: "https://www.thetimes.co.uk/?format=rss"
+      url: "https://www.thetimes.com/?format=rss"
       max_age_days: 30
 
     - id: "sky-news"
@@ -264,6 +270,7 @@ rss:
     - id: "iapp"
       name: "IAPP (Privacy Professionals)"
       url: "https://iapp.org/feed/"
+      enabled: false                  # IAPP 无公开 RSS，已确认不可用
       max_age_days: 30
 
     # 自定义源示例
