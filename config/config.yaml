@@ -127,6 +127,72 @@ rss:
       name: "雅虎财经"
       url: "https://finance.yahoo.com/news/rssindex"
 
+    # ── 官方政府与监管机构 ──────────────────────────────────────
+    - id: "whitehouse"
+      name: "White House"
+      url: "https://www.whitehouse.gov/feed/"
+      max_age_days: 3
+
+    - id: "whitehouse-briefing"
+      name: "White House Briefing Room"
+      url: "https://www.whitehouse.gov/briefing-room/feed/"
+      max_age_days: 3
+
+    - id: "euractiv-digital"
+      name: "EURACTIV Digital"
+      url: "https://www.euractiv.com/sections/digital/feed/"
+      max_age_days: 3
+
+    - id: "eu-parliament"
+      name: "European Parliament Press"
+      url: "https://www.europarl.europa.eu/rss/doc/press-releases/en.xml"
+      max_age_days: 3
+
+    - id: "eu-digital-strategy"
+      name: "EU Digital Strategy"
+      url: "https://digital-strategy.ec.europa.eu/en/rss.xml"
+      max_age_days: 3
+
+    # ── 主流外文科技媒体 ────────────────────────────────────────
+    - id: "reuters-tech"
+      name: "Reuters Technology"
+      url: "https://feeds.reuters.com/reuters/technologyNews"
+
+    - id: "bbc-tech"
+      name: "BBC Technology"
+      url: "http://feeds.bbci.co.uk/news/technology/rss.xml"
+
+    - id: "mit-tech-review"
+      name: "MIT Technology Review"
+      url: "https://www.technologyreview.com/feed/"
+
+    - id: "wired"
+      name: "Wired"
+      url: "https://www.wired.com/feed/rss"
+
+    - id: "techcrunch"
+      name: "TechCrunch"
+      url: "https://techcrunch.com/feed/"
+
+    - id: "the-verge"
+      name: "The Verge"
+      url: "https://www.theverge.com/rss/index.xml"
+
+    - id: "ars-technica"
+      name: "Ars Technica"
+      url: "http://feeds.arstechnica.com/arstechnica/index"
+
+    - id: "politico-eu"
+      name: "POLITICO Europe"
+      url: "https://www.politico.eu/feed/"
+      max_age_days: 3
+
+    # ── AI 政策与隐私专业媒体 ───────────────────────────────────
+    - id: "iapp"
+      name: "IAPP (Privacy Professionals)"
+      url: "https://iapp.org/feed/"
+      max_age_days: 3
+
     # 自定义源示例
     # - id: "custom-feed"
     #   name: "自定义源"
@@ -415,11 +481,22 @@ ai:
   # 完整列表: https://docs.litellm.ai/docs/providers
   # 如果你对于看英文文档比较头疼，那么可以点击页面右下角的 【Ask AI】 ,用中文询问怎么配置 
   
-  model: "deepseek/deepseek-chat"
+  model: "openai/gpt-4o-mini"        # GitHub Models 免费模型（需配合下方 api_base）
+                                    # 可选其他 GitHub Models 模型（额度更宽裕但能力较弱）：
+                                    # model: "openai/Phi-4-mini-instruct"    # 微软 Phi-4，轻量免费
+                                    # model: "openai/Meta-Llama-3.1-8B-Instruct"  # Meta Llama，免费
+                                    # 如需切换其他服务商，注释掉 api_base 再改 model：
+                                    # model: "gemini/gemini-2.0-flash"       # Google 免费 1500次/天
+                                    # model: "deepseek/deepseek-chat"        # 极低价付费
 
   api_key: ""                       # API Key（建议使用环境变量 AI_API_KEY）
+                                    # GitHub Actions 用户：
+                                    #   在 repo Settings → Secrets → Actions 中新建 AI_API_KEY
+                                    #   值填写 GitHub PAT（Personal Access Token）
+                                    #   生成地址：GitHub头像 → Settings → Developer settings → Personal access tokens
   
-  api_base: ""                      # 自定义 API 端点（可选，大多数情况留空）
+  api_base: "https://models.inference.ai.azure.com"  # GitHub Models 端点（使用 GitHub Models 时必填）
+                                    # 切换到其他服务商时请清空此行或注释掉
                                     # 示例: https://api.openai.com/v1（自建代理或兼容接口）
                                     #
                                     # 💡 超级重要：连接任意兼容 OpenAI 协议的模型商
