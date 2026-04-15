@@ -113,15 +113,15 @@ rss:
   # - 正整数：覆盖全局设置，只推送此天数内的文章
   # - 0：禁用此频道的新鲜度过滤，推送所有文章
   feeds:
-    - id: "hacker-news"
-      name: "Hacker News"
-      url: "https://hnrss.org/frontpage"
+    # - id: "hacker-news"
+    #   name: "Hacker News"
+    #   url: "https://hnrss.org/frontpage"
 
-    - id: "ruanyifeng"
-      name: "阮一峰的网络日志"
-      url: "http://www.ruanyifeng.com/blog/atom.xml"
-      enabled: false                  # 禁用
-      # max_age_days: 3               # 示例：推送 3 天内的文章（更新较慢的博客）
+    # - id: "ruanyifeng"
+    #   name: "阮一峰的网络日志"
+    #   url: "http://www.ruanyifeng.com/blog/atom.xml"
+    #   enabled: false                  # 禁用
+    #   # max_age_days: 3               # 示例：推送 3 天内的文章（更新较慢的博客）
      
     - id: "yahoo-finance"
       name: "雅虎财经"
@@ -165,7 +165,7 @@ rss:
 
     - id: "washington-post-world"
       name: "The Washington Post - World"
-      url: "http://feeds.washingtonpost.com/rss/world"
+      url: "https://www.washingtonpost.com/arcio/rss/"
       max_age_days: 30
 
     - id: "ap-top"
@@ -193,6 +193,7 @@ rss:
     - id: "the-times-uk"
       name: "The Times (UK)"
       url: "https://www.thetimes.com/?format=rss"
+      enabled: false                  # 返回 HTML 而非 RSS，无法解析
       max_age_days: 30
 
     - id: "sky-news"
@@ -203,11 +204,12 @@ rss:
     - id: "reuters-tech"
       name: "Reuters Technology"
       url: "https://feeds.reuters.com/reuters/technologyNews"
+      enabled: false                  # feeds.reuters.com 已下线，DNS 解析失败
 
     # ── 欧洲主流媒体与监管（英文）──────────────────────────────
     - id: "euractiv-digital"
       name: "EURACTIV Digital"
-      url: "https://www.euractiv.com/sections/digital/feed/"
+      url: "https://www.euractiv.com/feed/"
       max_age_days: 30
 
     - id: "eu-parliament"
