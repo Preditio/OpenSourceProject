@@ -127,41 +127,119 @@ rss:
       name: "雅虎财经"
       url: "https://finance.yahoo.com/news/rssindex"
 
-    # ── 官方政府与监管机构 ──────────────────────────────────────
+    # ── 美国主流媒体与监管（英文）───────────────────────────────
     - id: "whitehouse"
       name: "White House"
       url: "https://www.whitehouse.gov/feed/"
-      max_age_days: 3
+      max_age_days: 30
 
     - id: "whitehouse-briefing"
       name: "White House Briefing Room"
       url: "https://www.whitehouse.gov/briefing-room/feed/"
-      max_age_days: 3
+      max_age_days: 30
 
-    - id: "euractiv-digital"
-      name: "EURACTIV Digital"
-      url: "https://www.euractiv.com/sections/digital/feed/"
-      max_age_days: 3
+    - id: "wsj-world"
+      name: "The Wall Street Journal - World"
+      url: "https://feeds.a.dj.com/rss/RSSWorldNews.xml"
+      max_age_days: 30
 
-    - id: "eu-parliament"
-      name: "European Parliament Press"
-      url: "https://www.europarl.europa.eu/rss/doc/press-releases/en.xml"
-      max_age_days: 3
+    - id: "cnn-top"
+      name: "CNN - Top Stories"
+      url: "http://rss.cnn.com/rss/edition.rss"
+      max_age_days: 30
 
-    - id: "eu-digital-strategy"
-      name: "EU Digital Strategy"
-      url: "https://digital-strategy.ec.europa.eu/en/rss.xml"
-      max_age_days: 3
+    - id: "usnews"
+      name: "U.S. News"
+      url: "https://www.usnews.com/rss/news"
+      max_age_days: 30
 
-    # ── 主流外文科技媒体 ────────────────────────────────────────
+    - id: "nytimes-world"
+      name: "The New York Times - World"
+      url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+      max_age_days: 30
+
+    - id: "washington-post-world"
+      name: "The Washington Post - World"
+      url: "http://feeds.washingtonpost.com/rss/world"
+      max_age_days: 30
+
+    - id: "ap-top"
+      name: "Associated Press - Top News"
+      url: "https://feeds.apnews.com/apf-topnews"
+      max_age_days: 30
+
+    # ── 英国主流媒体（英文）────────────────────────────────────
+    - id: "bbc-tech"
+      name: "BBC Technology"
+      url: "http://feeds.bbci.co.uk/news/technology/rss.xml"
+      max_age_days: 30
+
+    - id: "financial-times"
+      name: "Financial Times"
+      url: "https://www.ft.com/rss/home"
+      max_age_days: 30
+
+    - id: "the-guardian"
+      name: "The Guardian - International"
+      url: "https://www.theguardian.com/international/rss"
+      max_age_days: 30
+
+    - id: "the-times-uk"
+      name: "The Times (UK)"
+      url: "https://www.thetimes.co.uk/?format=rss"
+      max_age_days: 30
+
+    - id: "sky-news"
+      name: "Sky News"
+      url: "https://feeds.skynews.com/feeds/rss/home.xml"
+      max_age_days: 30
+
     - id: "reuters-tech"
       name: "Reuters Technology"
       url: "https://feeds.reuters.com/reuters/technologyNews"
 
-    - id: "bbc-tech"
-      name: "BBC Technology"
-      url: "http://feeds.bbci.co.uk/news/technology/rss.xml"
+    # ── 欧洲主流媒体与监管（英文）──────────────────────────────
+    - id: "euractiv-digital"
+      name: "EURACTIV Digital"
+      url: "https://www.euractiv.com/sections/digital/feed/"
+      max_age_days: 30
 
+    - id: "eu-parliament"
+      name: "European Parliament Press"
+      url: "https://www.europarl.europa.eu/rss/doc/press-releases/en.xml"
+      max_age_days: 30
+
+    - id: "eu-digital-strategy"
+      name: "EU Digital Strategy"
+      url: "https://digital-strategy.ec.europa.eu/en/rss.xml"
+      max_age_days: 30
+
+    - id: "politico-eu"
+      name: "POLITICO Europe"
+      url: "https://www.politico.eu/feed/"
+      max_age_days: 30
+
+    - id: "dw-english"
+      name: "DW - English"
+      url: "https://rss.dw.com/rdf/rss-en-all"
+      max_age_days: 30
+
+    - id: "france24-en"
+      name: "France 24 - English"
+      url: "https://www.france24.com/en/rss"
+      max_age_days: 30
+
+    - id: "euronews-en"
+      name: "Euronews - English"
+      url: "https://www.euronews.com/rss?level=program&name=news"
+      max_age_days: 30
+
+    - id: "the-economist"
+      name: "The Economist"
+      url: "https://www.economist.com/the-world-this-week/rss.xml"
+      max_age_days: 30
+
+    # ── 主流外文科技媒体 ────────────────────────────────────────
     - id: "mit-tech-review"
       name: "MIT Technology Review"
       url: "https://www.technologyreview.com/feed/"
@@ -182,16 +260,11 @@ rss:
       name: "Ars Technica"
       url: "http://feeds.arstechnica.com/arstechnica/index"
 
-    - id: "politico-eu"
-      name: "POLITICO Europe"
-      url: "https://www.politico.eu/feed/"
-      max_age_days: 3
-
     # ── AI 政策与隐私专业媒体 ───────────────────────────────────
     - id: "iapp"
       name: "IAPP (Privacy Professionals)"
       url: "https://iapp.org/feed/"
-      max_age_days: 3
+      max_age_days: 30
 
     # 自定义源示例
     # - id: "custom-feed"
