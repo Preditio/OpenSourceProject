@@ -65,12 +65,12 @@ SMTP_CONFIGS = {
     "sohu.com": {"server": "smtp.sohu.com", "port": 465, "encryption": "SSL"},
     # 天翼邮箱（使用 SSL）
     "189.cn": {"server": "smtp.189.cn", "port": 465, "encryption": "SSL"},
-    # 阿里云邮箱（使用 TLS）
-    "aliyun.com": {"server": "smtp.aliyun.com", "port": 465, "encryption": "TLS"},
-    # Yandex邮箱（使用 TLS）
-    "yandex.com": {"server": "smtp.yandex.com", "port": 465, "encryption": "TLS"},
-    # iCloud邮箱（使用 SSL）
-    "icloud.com": {"server": "smtp.mail.me.com", "port": 587, "encryption": "SSL"},
+    # 阿里云邮箱（使用 SSL）
+    "aliyun.com": {"server": "smtp.aliyun.com", "port": 465, "encryption": "SSL"},
+    # Yandex邮箱（使用 SSL）
+    "yandex.com": {"server": "smtp.yandex.com", "port": 465, "encryption": "SSL"},
+    # iCloud邮箱（使用 TLS）
+    "icloud.com": {"server": "smtp.mail.me.com", "port": 587, "encryption": "TLS"},
 }
 
 
