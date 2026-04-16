@@ -1086,25 +1086,20 @@ class NewsAnalyzer:
 
         return results, id_to_name, failed_ids
 
-    def _crawl_rss_data(self) -> Tuple[Optional[List[Dict]], Optional[List[Dict]], Optional[List[Dict]], set]:
+    def _crawl_rss_data(self) -> Optional["RSSData"]:
         """
-        执行 RSS 数据抓取
+        执行 RSS 数据抓取（仅抓取和保存，不做模式处理）
 
         Returns:
-            (rss_items, rss_new_items, raw_rss_items, rss_new_urls) 元组：
-            - rss_items: 统计条目列表（按模式处理，用于统计区块）
-            - rss_new_items: 新增条目列表（用于新增区块）
-            - raw_rss_items: 原始 RSS 条目列表（用于独立展示区）
-            - rss_new_urls: 原始新增 RSS 条目的 URL 集合（用于 AI 模式 is_new 检测）
-            如果未启用或失败返回 (None, None, None, set())
+            保存成功的 RSSData 对象，如果未启用或失败返回 None
         """
         if not self.ctx.rss_enabled:
-            return None, None, None, set()
+            return None
 
         rss_feeds = self.ctx.rss_feeds
         if not rss_feeds:
             print("[RSS] 未配置任何 RSS 源")
-            return None, None, None, set()
+            return None
 
         try:
             from trendradar.crawler.rss import RSSFetcher, RSSFeedConfig
@@ -1140,7 +1135,7 @@ class NewsAnalyzer:
 
             if not feeds:
                 print("[RSS] 没有启用的 RSS 源")
-                return None, None, None, set()
+                return None
 
             # 创建抓取器
             rss_config = self.ctx.rss_config
@@ -1170,20 +1165,18 @@ class NewsAnalyzer:
             # 保存到存储后端
             if self.storage_manager.save_rss_data(rss_data):
                 print(f"[RSS] 数据已保存到存储后端")
-
-                # 处理 RSS 数据（按模式过滤）并返回用于合并推送
-                return self._process_rss_data_by_mode(rss_data)
+                return rss_data
             else:
                 print(f"[RSS] 数据保存失败")
-                return None, None, None, set()
+                return None
 
         except ImportError as e:
             print(f"[RSS] 缺少依赖: {e}")
             print("[RSS] 请安装 feedparser: pip install feedparser")
-            return None, None, None, set()
+            return None
         except Exception as e:
             print(f"[RSS] 抓取失败: {e}")
-            return None, None, None, set()
+            return None
 
     def _process_rss_data_by_mode(self, rss_data) -> Tuple[Optional[List[Dict]], Optional[List[Dict]], Optional[List[Dict]], set]:
         """
@@ -1485,10 +1478,7 @@ class NewsAnalyzer:
 
     def _execute_mode_strategy(
         self, mode_strategy: Dict, results: Dict, id_to_name: Dict, failed_ids: List,
-        rss_items: Optional[List[Dict]] = None,
-        rss_new_items: Optional[List[Dict]] = None,
-        raw_rss_items: Optional[List[Dict]] = None,
-        rss_new_urls: Optional[set] = None,
+        rss_data: Optional["RSSData"] = None,
     ) -> Optional[str]:
         """执行模式特定逻辑，支持热榜+RSS合并推送
 
@@ -1522,6 +1512,15 @@ class NewsAnalyzer:
         if not schedule.collect:
             print("[调度] 当前时间段不执行数据采集，跳过分析流水线")
             return None
+
+        # 在调度器解析 report_mode 后处理 RSS 数据，确保使用正确的模式
+        rss_items = None
+        rss_new_items = None
+        raw_rss_items = None
+        rss_new_urls = set()
+        if rss_data is not None:
+            rss_items, rss_new_items, raw_rss_items, rss_new_urls = self._process_rss_data_by_mode(rss_data)
+
         # 获取当前监控平台ID列表
         current_platform_ids = self.ctx.platform_ids
 
@@ -1713,14 +1712,13 @@ class NewsAnalyzer:
             # 抓取热榜数据
             results, id_to_name, failed_ids = self._crawl_data()
 
-            # 抓取 RSS 数据（如果启用），返回统计条目、新增条目和原始条目
-            rss_items, rss_new_items, raw_rss_items, rss_new_urls = self._crawl_rss_data()
+            # 抓取 RSS 数据（如果启用），仅抓取和保存，模式处理在调度器解析后执行
+            rss_data = self._crawl_rss_data()
 
             # 执行模式策略，传递 RSS 数据用于合并推送
             self._execute_mode_strategy(
                 mode_strategy, results, id_to_name, failed_ids,
-                rss_items=rss_items, rss_new_items=rss_new_items,
-                raw_rss_items=raw_rss_items, rss_new_urls=rss_new_urls
+                rss_data=rss_data
             )
 
         except Exception as e:
