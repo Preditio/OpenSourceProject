@@ -274,7 +274,11 @@ rss:
       url: "https://iapp.org/feed/"
       enabled: false                  # IAPP 无公开 RSS，已确认不可用
       max_age_days: 30
-
+    # ── 综合新闻 ────────────────────────────────────────
+    - id: "yahoo-news-world"
+      name: "Yahoo News - World"
+      url: "https://news.yahoo.com/rss/world"
+      max_age_days: 21
     # 自定义源示例
     # - id: "custom-feed"
     #   name: "自定义源"
@@ -299,7 +303,7 @@ rss:
 # - incremental：最少打扰，只看新增
 # ===============================================================
 report:
-  mode: "current"                     # daily | current | incremental（schedule 开启时作为默认值）
+  mode: "daily"                      # daily | current | incremental（schedule 开启时作为默认值）
 
   display_mode: "keyword"             # 分组维度: keyword | platform
                                       # keyword: 按关键词分组显示（默认）

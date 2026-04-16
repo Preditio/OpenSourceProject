@@ -166,9 +166,9 @@ presets:
     default:
       collect: true                # 始终采集
       analyze: true                # AI 分析当前榜单
-      ai_mode: "current"           # AI 分析当前榜单
-      push: true                   # 每次推送当前在榜热点
-      report_mode: "current"       # 当前在榜的新闻
+      ai_mode: "daily"             # AI 分析当日全部
+      push: true                   # 每次推送
+      report_mode: "daily"         # 当日全部新闻汇总
       # frequency_file: "xxx.txt"               # 关键词文件（可选，位于 config/custom/keyword/）
       # interests_file: "xxx.txt"                # AI 兴趣文件（可选，位于 config/custom/ai/）
       # filter_method: "keyword"                # 筛选策略（可选: keyword | ai，不填用全局 filter.method）
