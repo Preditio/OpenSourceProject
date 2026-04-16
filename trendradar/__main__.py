@@ -1086,7 +1086,7 @@ class NewsAnalyzer:
 
         return results, id_to_name, failed_ids
 
-    def _crawl_rss_data(self):
+    def _crawl_rss_data(self) -> Optional["RSSData"]:
         """
         执行 RSS 数据抓取（仅抓取和保存，不做模式处理）
 
@@ -1478,7 +1478,7 @@ class NewsAnalyzer:
 
     def _execute_mode_strategy(
         self, mode_strategy: Dict, results: Dict, id_to_name: Dict, failed_ids: List,
-        rss_data=None,
+        rss_data: Optional["RSSData"] = None,
     ) -> Optional[str]:
         """执行模式特定逻辑，支持热榜+RSS合并推送
 
