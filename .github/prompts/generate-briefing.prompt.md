@@ -6,14 +6,14 @@ description: "一键触发 TrendRadar 抓取并准备 Briefing"
 用户说"生成X天的briefing"或"X天briefing"时，从指令中提取天数，然后自动执行以下步骤：
 
 ## Step 1: 修改 max_age_days
-编辑 `D:\Github_Projects\OpenSourceProject\config\config.yaml`，将 `freshness_filter` 下的 `max_age_days` 改为用户指定的天数。
+编辑当前工作区的 `config/config.yaml`，将 `freshness_filter` 下的 `max_age_days` 改为用户指定的天数。
 
 ## Step 2: Git push
-在终端执行：
+在终端执行（在工作区根目录下）：
 ```
-git -C "D:\Github_Projects\OpenSourceProject" add config/config.yaml
-git -C "D:\Github_Projects\OpenSourceProject" commit -m "Briefing: max_age_days -> {天数}"
-git -C "D:\Github_Projects\OpenSourceProject" push
+git add config/config.yaml
+git commit -m "Briefing: max_age_days -> {天数}"
+git push
 ```
 
 ## Step 3: 触发 GitHub Actions
