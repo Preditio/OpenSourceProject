@@ -79,10 +79,20 @@ def _load_crawler_config(config_data: Dict) -> Dict:
 def _load_report_config(config_data: Dict) -> Dict:
     """加载报告配置"""
     report_config = config_data.get("report", {})
+    carryover_config = report_config.get("carryover", {})
 
     # 环境变量覆盖
     sort_by_position_env = _get_env_bool("SORT_BY_POSITION_FIRST")
     max_news_env = _get_env_int("MAX_NEWS_PER_KEYWORD")
+
+    raw_lookback_days = carryover_config.get("lookback_days", 1)
+    try:
+        lookback_days = int(raw_lookback_days)
+    except (ValueError, TypeError):
+        lookback_days = 1
+
+    if lookback_days < 0:
+        lookback_days = 0
 
     return {
         "REPORT_MODE": report_config.get("mode", "daily"),
@@ -90,6 +100,10 @@ def _load_report_config(config_data: Dict) -> Dict:
         "RANK_THRESHOLD": report_config.get("rank_threshold", 10),
         "SORT_BY_POSITION_FIRST": sort_by_position_env if sort_by_position_env is not None else report_config.get("sort_by_position_first", False),
         "MAX_NEWS_PER_KEYWORD": max_news_env or report_config.get("max_news_per_keyword", 0),
+        "SNAPSHOT_CARRYOVER": {
+            "ENABLED": carryover_config.get("enabled", False),
+            "LOOKBACK_DAYS": lookback_days,
+        },
     }
 
 

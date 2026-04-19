@@ -567,6 +567,15 @@ class RemoteStorageBackend(SQLiteStorageMixin, StorageBackend):
     def get_all_rss_ids(self, date=None):
         return self._get_all_rss_ids_impl(date)
 
+    def save_push_snapshot(self, mode, snapshot_date, scope_key, payload, date=None):
+        saved = self._save_push_snapshot_impl(date, mode, snapshot_date, scope_key, payload)
+        if saved:
+            self._upload_sqlite(date)
+        return saved
+
+    def get_latest_push_snapshot(self, mode, current_date, lookback_days, scope_key, date=None):
+        return self._get_latest_push_snapshot_impl(date, mode, current_date, lookback_days, scope_key)
+
     # ========================================
     # 远程特有功能：TXT/HTML 快照（临时目录）
     # ========================================

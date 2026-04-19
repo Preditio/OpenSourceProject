@@ -577,11 +577,17 @@ class AppContext:
         # 3. 检查提示词是否变更
         stored_hash = storage.get_latest_prompt_hash(interests_file=effective_interests_file)
 
+        hash_changed = stored_hash != current_hash
+        print(
+            f"[AI筛选] 标签基线: interests_file={effective_interests_file}, "
+            f"hash={'changed' if hash_changed else 'unchanged'}"
+        )
+
         if debug:
             print(f"[AI筛选][DEBUG] 数据库存储 hash: {stored_hash}")
             print(f"[AI筛选][DEBUG] hash 对比: stored={stored_hash} vs current={current_hash} → {'匹配' if stored_hash == current_hash else '不匹配'}")
 
-        if stored_hash != current_hash:
+        if hash_changed:
             new_version = storage.get_latest_ai_filter_tag_version() + 1
             threshold = filter_config.get("RECLASSIFY_THRESHOLD", 0.6)
 

@@ -28,6 +28,11 @@ from trendradar.storage import convert_crawl_results_to_news_data
 from trendradar.utils.time import DEFAULT_TIMEZONE, is_within_days, calculate_days_old
 from trendradar.ai import AIAnalyzer, AIAnalysisResult
 from trendradar.core.scheduler import ResolvedSchedule
+from trendradar.report.snapshot import (
+    build_snapshot_payload,
+    merge_with_snapshot,
+    resolve_scope_key,
+)
 
 
 def _parse_version(version_str: str) -> Tuple[int, int, int]:
@@ -924,6 +929,48 @@ class NewsAnalyzer:
         has_notification = self._has_notification_configured()
         cfg = self.ctx.config
 
+        # 快照并集补齐：仅在 daily 模式下启用，用前一日推送快照补齐当前推送
+        carryover_cfg = cfg.get("SNAPSHOT_CARRYOVER", {}) or {}
+        carryover_enabled = (
+            bool(carryover_cfg.get("ENABLED", False))
+            and self.report_mode == "daily"
+        )
+        scope_key = resolve_scope_key(
+            self.filter_method or self.ctx.filter_method,
+            self.interests_file,
+            self.frequency_file,
+        )
+        current_date_str = self.ctx.format_date()
+
+        if carryover_enabled:
+            try:
+                storage_manager = self.ctx.get_storage_manager()
+                lookback_days = int(carryover_cfg.get("LOOKBACK_DAYS", 1) or 1)
+                snapshot_payload = storage_manager.get_latest_push_snapshot(
+                    mode="daily",
+                    current_date=current_date_str,
+                    lookback_days=lookback_days,
+                    scope_key=scope_key,
+                )
+                if snapshot_payload:
+                    merged_stats, merged_rss, summary = merge_with_snapshot(
+                        stats, rss_items, snapshot_payload
+                    )
+                    if summary["snapshot_used"]:
+                        print(
+                            f"[推送][快照] 已用前一日快照补齐: "
+                            f"stats +{summary['stats_added']} / rss +{summary['rss_added']} "
+                            f"(scope={scope_key})"
+                        )
+                        stats = merged_stats
+                        rss_items = merged_rss
+                    else:
+                        print(f"[推送][快照] 快照存在但无新增条目 (scope={scope_key})")
+                else:
+                    print(f"[推送][快照] 未找到可用前一日快照 (scope={scope_key})")
+            except Exception as snap_err:
+                print(f"[推送][快照] 读取/合并快照失败，按当前数据继续推送: {snap_err}")
+
         # 检查是否有有效内容（热榜或RSS）
         has_news_content = self._has_valid_content(stats, new_titles)
         has_rss_content = bool(rss_items and len(rss_items) > 0)
@@ -1003,6 +1050,21 @@ class NewsAnalyzer:
                     scheduler = self.ctx.create_scheduler()
                     date_str = self.ctx.format_date()
                     scheduler.record_execution(schedule.period_key, "push", date_str)
+
+                # 保存当日推送快照（仅 daily 模式 + 启用 carryover 时）
+                if carryover_enabled:
+                    try:
+                        storage_manager = self.ctx.get_storage_manager()
+                        payload = build_snapshot_payload(stats, rss_items)
+                        storage_manager.save_push_snapshot(
+                            mode="daily",
+                            snapshot_date=current_date_str,
+                            scope_key=scope_key,
+                            payload=payload,
+                        )
+                        print(f"[推送][快照] 已保存当日推送快照 (scope={scope_key}, date={current_date_str})")
+                    except Exception as snap_err:
+                        print(f"[推送][快照] 保存当日推送快照失败: {snap_err}")
 
             return True
 
