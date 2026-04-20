@@ -240,6 +240,9 @@ class NewsAnalyzer:
         self.is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
         self.is_docker_container = self._detect_docker_environment()
         self.update_info = None
+        # 强制推送：跳过 schedule.push 与 once_push 限制（保留内容判定与渠道判定）
+        # 由 CLI --force-push 或环境变量 FORCE_PUSH=true 触发
+        self.force_push = os.environ.get("FORCE_PUSH", "").strip().lower() in ("1", "true", "yes")
         self.proxy_url = None
         self._setup_proxy()
         self.data_fetcher = DataFetcher(self.proxy_url)
@@ -994,19 +997,22 @@ class NewsAnalyzer:
             total_count = news_count + rss_count
             print(f"[推送] 准备发送：{' + '.join(content_parts)}，合计 {total_count} 条")
 
-            # 调度系统决策
-            if not schedule.push:
-                print("[推送] 调度器: 当前时间段不执行推送")
-                return False
-
-            if schedule.once_push and schedule.period_key:
-                scheduler = self.ctx.create_scheduler()
-                date_str = self.ctx.format_date()
-                if scheduler.already_executed(schedule.period_key, "push", date_str):
-                    print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已推送过，跳过")
+            # 调度系统决策（force_push 时跳过时段开关与去重限制，但仍受内容/渠道判定约束）
+            if self.force_push:
+                print("[推送] 强制推送已启用 (FORCE_PUSH)，跳过时段与去重限制")
+            else:
+                if not schedule.push:
+                    print("[推送] 调度器: 当前时间段不执行推送")
                     return False
-                else:
-                    print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次推送")
+
+                if schedule.once_push and schedule.period_key:
+                    scheduler = self.ctx.create_scheduler()
+                    date_str = self.ctx.format_date()
+                    if scheduler.already_executed(schedule.period_key, "push", date_str):
+                        print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已推送过，跳过")
+                        return False
+                    else:
+                        print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次推送")
 
             # AI 分析：优先使用传入的结果，避免重复分析
             if ai_result is None:
@@ -2230,8 +2236,15 @@ def main():
         action="store_true",
         help="发送测试通知到已配置渠道"
     )
+    parser.add_argument(
+        "--force-push",
+        action="store_true",
+        help="忽略时段与去重限制，本次运行强制推送一次（仍受内容判定与渠道配置约束）"
+    )
 
     args = parser.parse_args()
+    if getattr(args, "force_push", False):
+        os.environ["FORCE_PUSH"] = "true"
 
     debug_mode = False
     try:
