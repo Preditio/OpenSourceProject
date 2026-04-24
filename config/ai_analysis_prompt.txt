@@ -100,11 +100,12 @@
 - 禁止使用 Markdown（如 **加粗**、## 标题、- 列表）
 - 禁止使用 emoji 或特殊装饰符号
 
-## 分析板块说明（精简为 3 个板块）
+## 分析板块说明（精简为 2 个板块）
 
 ⚠️ 板块结构要求（极其重要）：
-- 仅输出以下 3 个字段：core_trends、rss_insights、standalone_summaries
+- 仅输出以下 2 个字段：core_trends、rss_insights
 - 其余字段（sentiment_controversy、signals、outlook_strategy）必须返回空字符串 ""
+- standalone_summaries 必须返回空对象 {}
 - 不要把信息塞进未启用的字段
 - 每个板块的第一行必须是「一句话结论：xxx」（紧跟一个换行 \n），其后再展开细节
 - 不在任何板块内说"暂无显著异常"等套话；如真无内容，仅返回空字符串
@@ -122,13 +123,6 @@
 - 第一行：「一句话结论：xxx」用 30 字以内点明 RSS 给出的关键增量
 - 然后空一行，列出 1–3 条具体洞察，每条 30–50 字，每条独占一行（用 1. 2. 3.）
 - 不要重复 core_trends 已说的内容；如确实无 RSS 增量，整段返回空字符串
-
-### 3. standalone_summaries — 独立源点速览（每源 80 字以内）
-仅当数据中包含独立展示区时返回。对象类型，key = 源名（按数据中出现的 ### 标题方括号名），value = 80 字内概括。
-写法：
-- 每个 value 第一行：「一句话结论：xxx」点明该源整体走势（30 字以内）
-- 然后空一行，列出 1–2 条该源独有的话题（带排名走势），不重复已在 core_trends 提到的内容
-- 无独立展示区数据时，整个字段返回空对象 {}
 
 [user]
 请分析以下热点新闻数据：
@@ -149,7 +143,7 @@
 {rss_content}
 
 ## 独立展示区
-以下为独立展示的完整热榜/RSS 数据（不受关键词过滤），请按板块说明中 standalone_summaries 的要求处理。
+以下为独立展示的完整热榜/RSS 数据（不受关键词过滤），本次不需要为其单独输出板块。
 {standalone_content}
 
 ---
@@ -163,12 +157,13 @@
   "signals": "",
   "rss_insights": "（RSS 深度洞察：第一行『一句话结论：xxx』，空行，1.2. 列 1-3 条）",
   "outlook_strategy": "",
-  "standalone_summaries": {"知乎": "第一行『一句话结论：xxx』，空行，1-2 条独有话题"}
+  "standalone_summaries": {}
 }
 ```
 
 要求：
 - 使用 {language} 输出，语言简练专业
-- 仅填 core_trends / rss_insights / standalone_summaries 三个字段，其余三个字段必须为 ""
-- 三个板块内容不重叠
-- 若 rss_insights 或 standalone_summaries 无内容，对应字段返回 "" 或 {}
+- 仅填 core_trends / rss_insights 两个字段，其余三个字段必须为 ""
+- standalone_summaries 必须固定返回 {}
+- 两个板块内容不重叠
+- 若 rss_insights 无内容，对应字段返回 ""

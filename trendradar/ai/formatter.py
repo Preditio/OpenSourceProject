@@ -441,15 +441,7 @@ def render_ai_analysis_html_rich(result: AIAnalysisResult) -> str:
                         <div class="ai-block-content">{content_html}</div>
                     </div>"""
 
-    if result.standalone_summaries:
-        summaries_text = _format_standalone_summaries(result.standalone_summaries)
-        if summaries_text:
-            summaries_html = _escape_html(summaries_text).replace("\n", "<br>")
-            ai_html += f"""
-                    <div class="ai-block">
-                        <div class="ai-block-title">独立源点速览</div>
-                        <div class="ai-block-content">{summaries_html}</div>
-                    </div>"""
+    # 邮件端按产品要求移除“独立源点速览”板块，避免占用空间。
 
     ai_html += """
                     </div>
