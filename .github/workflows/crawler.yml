@@ -38,6 +38,12 @@ on:
     - cron: "0 */3 * * *"
 
   workflow_dispatch:
+    inputs:
+      force_push:
+        description: "强制推送（跳过时段与去重限制，仅本次运行生效）"
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: crawler-${{ github.ref_name }}
@@ -167,4 +173,6 @@ jobs:
           S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
           S3_REGION: ${{ secrets.S3_REGION }}
           GITHUB_ACTIONS: true
+          # 仅手动触发且勾选 force_push 时生效；schedule 触发时不会传入 inputs，默认为空。
+          FORCE_PUSH: ${{ github.event_name == 'workflow_dispatch' && inputs.force_push && 'true' || 'false' }}
         run: uv run python -m trendradar

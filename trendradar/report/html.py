@@ -1518,7 +1518,7 @@ def render_html_content(
                 </div>"""
 
     # 生成 RSS 统计内容
-    def render_rss_stats_html(stats: List[Dict], title: str = "RSS 订阅更新") -> str:
+    def render_rss_stats_html(stats: List[Dict], title: str = "重点媒体热点抓取") -> str:
         """渲染 RSS 统计区块 HTML
 
         Args:
@@ -1874,7 +1874,7 @@ def render_html_content(
         return standalone_html
 
     # 生成 RSS 统计和新增 HTML
-    rss_stats_html = render_rss_stats_html(rss_items, "RSS 订阅更新") if rss_items else ""
+    rss_stats_html = render_rss_stats_html(rss_items, "重点媒体热点抓取") if rss_items else ""
     rss_new_html = render_rss_stats_html(rss_new_items, "RSS 新增更新") if rss_new_items else ""
 
     # 生成独立展示区 HTML

@@ -95,6 +95,20 @@ CREATE TABLE IF NOT EXISTS period_executions (
 );
 
 -- ============================================
+-- 推送快照表
+-- 记录每次推送实际发送的数据快照，用于次日并集补齐
+-- ============================================
+CREATE TABLE IF NOT EXISTS push_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    snapshot_date TEXT NOT NULL,           -- YYYY-MM-DD（业务日期）
+    mode TEXT NOT NULL,                    -- daily/current/incremental
+    scope_key TEXT NOT NULL DEFAULT '',    -- 作用域（如 ai:ai_interests.txt）
+    payload TEXT NOT NULL,                 -- JSON 快照内容
+    created_at TEXT NOT NULL,
+    UNIQUE(snapshot_date, mode, scope_key)
+);
+
+-- ============================================
 -- 索引定义
 -- ============================================
 
@@ -120,3 +134,7 @@ CREATE INDEX IF NOT EXISTS idx_rank_history_news ON rank_history(news_item_id);
 -- 时间段执行记录索引
 CREATE INDEX IF NOT EXISTS idx_period_exec_lookup
 ON period_executions(execution_date, period_key, action);
+
+-- 推送快照查询索引
+CREATE INDEX IF NOT EXISTS idx_push_snapshots_lookup
+ON push_snapshots(mode, scope_key, snapshot_date DESC);

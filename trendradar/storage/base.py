@@ -525,6 +525,26 @@ class StorageBackend(ABC):
     def get_all_rss_ids(self, date: Optional[str] = None) -> List[Dict]:
         return []
 
+    def save_push_snapshot(
+        self,
+        mode: str,
+        snapshot_date: str,
+        scope_key: str,
+        payload: Dict,
+        date: Optional[str] = None,
+    ) -> bool:
+        return False
+
+    def get_latest_push_snapshot(
+        self,
+        mode: str,
+        current_date: str,
+        lookback_days: int,
+        scope_key: str,
+        date: Optional[str] = None,
+    ) -> Optional[Dict]:
+        return None
+
 
 def convert_crawl_results_to_news_data(
     results: Dict[str, Dict],

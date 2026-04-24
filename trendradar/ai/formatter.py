@@ -86,7 +86,7 @@ def render_ai_analysis_markdown(result: AIAnalysisResult) -> str:
     lines = ["**✨ AI 热点分析**", ""]
 
     if result.core_trends:
-        lines.extend(["**核心热点态势**", _format_list_content(result.core_trends), ""])
+        lines.extend(["**要点速览**", _format_list_content(result.core_trends), ""])
 
     if result.sentiment_controversy:
         lines.extend(
@@ -124,7 +124,7 @@ def render_ai_analysis_feishu(result: AIAnalysisResult) -> str:
     lines = ["**✨ AI 热点分析**", ""]
 
     if result.core_trends:
-        lines.extend(["**核心热点态势**", _format_list_content(result.core_trends), ""])
+        lines.extend(["**要点速览**", _format_list_content(result.core_trends), ""])
 
     if result.sentiment_controversy:
         lines.extend(
@@ -163,7 +163,7 @@ def render_ai_analysis_dingtalk(result: AIAnalysisResult) -> str:
 
     if result.core_trends:
         lines.extend(
-            ["#### 核心热点态势", _format_list_content(result.core_trends), ""]
+            ["#### 要点速览", _format_list_content(result.core_trends), ""]
         )
 
     if result.sentiment_controversy:
@@ -213,7 +213,7 @@ def render_ai_analysis_html(result: AIAnalysisResult) -> str:
         html_parts.extend(
             [
                 '<div class="ai-section">',
-                "<h4>核心热点态势</h4>",
+                "<h4>要点速览</h4>",
                 f'<div class="ai-content">{content_html}</div>',
                 "</div>",
             ]
@@ -294,7 +294,7 @@ def render_ai_analysis_plain(result: AIAnalysisResult) -> str:
     lines = ["【✨ AI 热点分析】", ""]
 
     if result.core_trends:
-        lines.extend(["[核心热点态势]", _format_list_content(result.core_trends), ""])
+        lines.extend(["[要点速览]", _format_list_content(result.core_trends), ""])
 
     if result.sentiment_controversy:
         lines.extend(
@@ -333,7 +333,7 @@ def render_ai_analysis_telegram(result: AIAnalysisResult) -> str:
     lines = ["<b>✨ AI 热点分析</b>", ""]
 
     if result.core_trends:
-        lines.extend(["<b>核心热点态势</b>", _escape_html(_format_list_content(result.core_trends)), ""])
+        lines.extend(["<b>要点速览</b>", _escape_html(_format_list_content(result.core_trends)), ""])
 
     if result.sentiment_controversy:
         lines.extend(["<b>舆论风向争议</b>", _escape_html(_format_list_content(result.sentiment_controversy)), ""])
@@ -401,7 +401,7 @@ def render_ai_analysis_html_rich(result: AIAnalysisResult) -> str:
         content_html = _escape_html(content).replace("\n", "<br>")
         ai_html += f"""
                     <div class="ai-block">
-                        <div class="ai-block-title">核心热点态势</div>
+                        <div class="ai-block-title">要点速览</div>
                         <div class="ai-block-content">{content_html}</div>
                     </div>"""
 
@@ -441,15 +441,7 @@ def render_ai_analysis_html_rich(result: AIAnalysisResult) -> str:
                         <div class="ai-block-content">{content_html}</div>
                     </div>"""
 
-    if result.standalone_summaries:
-        summaries_text = _format_standalone_summaries(result.standalone_summaries)
-        if summaries_text:
-            summaries_html = _escape_html(summaries_text).replace("\n", "<br>")
-            ai_html += f"""
-                    <div class="ai-block">
-                        <div class="ai-block-title">独立源点速览</div>
-                        <div class="ai-block-content">{summaries_html}</div>
-                    </div>"""
+    # 邮件端按产品要求移除“独立源点速览”板块，避免占用空间。
 
     ai_html += """
                     </div>

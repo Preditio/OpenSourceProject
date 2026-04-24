@@ -367,6 +367,14 @@ class StorageManager:
         """获取所有 RSS ID 和标题"""
         return self.get_backend().get_all_rss_ids(date)
 
+    def save_push_snapshot(self, mode, snapshot_date, scope_key, payload, date=None):
+        """保存推送快照"""
+        return self.get_backend().save_push_snapshot(mode, snapshot_date, scope_key, payload, date)
+
+    def get_latest_push_snapshot(self, mode, current_date, lookback_days, scope_key, date=None):
+        """获取回看窗口内最新推送快照"""
+        return self.get_backend().get_latest_push_snapshot(mode, current_date, lookback_days, scope_key, date)
+
 
 
 def get_storage_manager(

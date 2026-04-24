@@ -6,6 +6,7 @@ SQLite 存储 Mixin
 """
 
 import sqlite3
+import json
 from abc import abstractmethod
 from datetime import datetime
 from pathlib import Path
@@ -1637,6 +1638,13 @@ class SQLiteStorageMixin:
                     """, rss_ids)
 
                     rss_info = {row[0]: row for row in rss_cursor.fetchall()}
+                    missing_rss_ids = [rid for rid in rss_ids if rid not in rss_info]
+                    if missing_rss_ids:
+                        sample = ", ".join(str(x) for x in missing_rss_ids[:5])
+                        print(
+                            f"[AI筛选] 警告: 检测到 {len(missing_rss_ids)} 条 RSS 分类结果在 rss 库中缺失 "
+                            f"(示例ID: {sample})，这些条目将不会出现在推送中"
+                        )
 
                     for fr_row in rss_filter_rows:
                         rss_id = fr_row[0]
@@ -1717,3 +1725,97 @@ class SQLiteStorageMixin:
         except Exception as e:
             print(f"[AI筛选] 获取 RSS 列表失败: {e}")
             return []
+
+    # ========================================
+    # 推送快照（用于跨日并集补齐）
+    # ========================================
+
+    def _save_push_snapshot_impl(
+        self,
+        date: Optional[str],
+        mode: str,
+        snapshot_date: str,
+        scope_key: str,
+        payload: Dict[str, Any],
+    ) -> bool:
+        """保存推送快照（同日同模式同作用域覆盖）"""
+        try:
+            conn = self._get_connection(date)
+            cursor = conn.cursor()
+            now_str = self._get_configured_time().strftime("%Y-%m-%d %H:%M:%S")
+            payload_json = json.dumps(payload, ensure_ascii=False)
+
+            cursor.execute(
+                """
+                INSERT INTO push_snapshots
+                (snapshot_date, mode, scope_key, payload, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(snapshot_date, mode, scope_key)
+                DO UPDATE SET
+                    payload = excluded.payload,
+                    created_at = excluded.created_at
+                """,
+                (snapshot_date, mode, scope_key, payload_json, now_str),
+            )
+
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"[推送快照] 保存失败: {e}")
+            return False
+
+    def _get_latest_push_snapshot_impl(
+        self,
+        date: Optional[str],
+        mode: str,
+        current_date: str,
+        lookback_days: int,
+        scope_key: str,
+    ) -> Optional[Dict[str, Any]]:
+        """获取回看窗口内最新一条推送快照（仅取前一日及更早，不含当天）"""
+        if lookback_days <= 0:
+            return None
+
+        try:
+            current_dt = datetime.strptime(current_date, "%Y-%m-%d").date()
+        except ValueError:
+            return None
+
+        try:
+            conn = self._get_connection(date)
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT snapshot_date, payload
+                FROM push_snapshots
+                WHERE mode = ? AND scope_key = ? AND snapshot_date < ?
+                ORDER BY snapshot_date DESC
+                LIMIT 30
+                """,
+                (mode, scope_key, current_date),
+            )
+
+            for row in cursor.fetchall():
+                snapshot_date, payload_json = row[0], row[1]
+                try:
+                    snapshot_dt = datetime.strptime(snapshot_date, "%Y-%m-%d").date()
+                except ValueError:
+                    continue
+
+                delta_days = (current_dt - snapshot_dt).days
+                if 1 <= delta_days <= lookback_days:
+                    try:
+                        payload = json.loads(payload_json)
+                    except json.JSONDecodeError:
+                        continue
+
+                    return {
+                        "snapshot_date": snapshot_date,
+                        "payload": payload,
+                    }
+
+            return None
+        except Exception as e:
+            print(f"[推送快照] 查询失败: {e}")
+            return None

@@ -28,6 +28,11 @@ from trendradar.storage import convert_crawl_results_to_news_data
 from trendradar.utils.time import DEFAULT_TIMEZONE, is_within_days, calculate_days_old
 from trendradar.ai import AIAnalyzer, AIAnalysisResult
 from trendradar.core.scheduler import ResolvedSchedule
+from trendradar.report.snapshot import (
+    build_snapshot_payload,
+    merge_with_snapshot,
+    resolve_scope_key,
+)
 
 
 def _parse_version(version_str: str) -> Tuple[int, int, int]:
@@ -235,6 +240,9 @@ class NewsAnalyzer:
         self.is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
         self.is_docker_container = self._detect_docker_environment()
         self.update_info = None
+        # 强制推送：跳过 schedule.push 与 once_push 限制（保留内容判定与渠道判定）
+        # 由 CLI --force-push 或环境变量 FORCE_PUSH=true 触发
+        self.force_push = os.environ.get("FORCE_PUSH", "").strip().lower() in ("1", "true", "yes")
         self.proxy_url = None
         self._setup_proxy()
         self.data_fetcher = DataFetcher(self.proxy_url)
@@ -472,15 +480,21 @@ class NewsAnalyzer:
 
         # 调度系统决策
         if not schedule.analyze:
-            print("[AI] 调度器: 当前时间段不执行 AI 分析")
-            return None
+            if self.force_push:
+                print("[AI] 强制推送已启用，本时段虽未配置分析，仍强制执行 AI 分析")
+            else:
+                print("[AI] 调度器: 当前时间段不执行 AI 分析")
+                return None
 
         if schedule.once_analyze and schedule.period_key:
             scheduler = self.ctx.create_scheduler()
             date_str = self.ctx.format_date()
             if scheduler.already_executed(schedule.period_key, "analyze", date_str):
-                print(f"[AI] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已分析过，跳过")
-                return None
+                if self.force_push:
+                    print(f"[AI] 强制推送：时间段 {schedule.period_name or schedule.period_key} 今天已分析过，仍重新分析")
+                else:
+                    print(f"[AI] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已分析过，跳过")
+                    return None
             else:
                 print(f"[AI] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次分析")
 
@@ -924,6 +938,46 @@ class NewsAnalyzer:
         has_notification = self._has_notification_configured()
         cfg = self.ctx.config
 
+        # 快照并集补齐：任意报告模式均允许，按运行时 mode 分桶隔离
+        carryover_cfg = cfg.get("SNAPSHOT_CARRYOVER", {}) or {}
+        carryover_enabled = bool(carryover_cfg.get("ENABLED", False))
+        snapshot_mode = mode or self.report_mode or "daily"
+        scope_key = resolve_scope_key(
+            self.filter_method or self.ctx.filter_method,
+            self.interests_file,
+            self.frequency_file,
+        )
+        current_date_str = self.ctx.format_date()
+
+        if carryover_enabled:
+            try:
+                storage_manager = self.ctx.get_storage_manager()
+                lookback_days = int(carryover_cfg.get("LOOKBACK_DAYS", 1) or 1)
+                snapshot_payload = storage_manager.get_latest_push_snapshot(
+                    mode=snapshot_mode,
+                    current_date=current_date_str,
+                    lookback_days=lookback_days,
+                    scope_key=scope_key,
+                )
+                if snapshot_payload:
+                    merged_stats, merged_rss, summary = merge_with_snapshot(
+                        stats, rss_items, snapshot_payload
+                    )
+                    if summary["snapshot_used"]:
+                        print(
+                            f"[推送][快照] 已用前一日快照补齐: "
+                            f"stats +{summary['stats_added']} / rss +{summary['rss_added']} "
+                            f"(mode={snapshot_mode}, scope={scope_key})"
+                        )
+                        stats = merged_stats
+                        rss_items = merged_rss
+                    else:
+                        print(f"[推送][快照] 快照存在但无新增条目 (mode={snapshot_mode}, scope={scope_key})")
+                else:
+                    print(f"[推送][快照] 未找到可用前一日快照 (mode={snapshot_mode}, scope={scope_key})")
+            except Exception as snap_err:
+                print(f"[推送][快照] 读取/合并快照失败，按当前数据继续推送: {snap_err}")
+
         # 检查是否有有效内容（热榜或RSS）
         has_news_content = self._has_valid_content(stats, new_titles)
         has_rss_content = bool(rss_items and len(rss_items) > 0)
@@ -947,19 +1001,22 @@ class NewsAnalyzer:
             total_count = news_count + rss_count
             print(f"[推送] 准备发送：{' + '.join(content_parts)}，合计 {total_count} 条")
 
-            # 调度系统决策
-            if not schedule.push:
-                print("[推送] 调度器: 当前时间段不执行推送")
-                return False
-
-            if schedule.once_push and schedule.period_key:
-                scheduler = self.ctx.create_scheduler()
-                date_str = self.ctx.format_date()
-                if scheduler.already_executed(schedule.period_key, "push", date_str):
-                    print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已推送过，跳过")
+            # 调度系统决策（force_push 时跳过时段开关与去重限制，但仍受内容/渠道判定约束）
+            if self.force_push:
+                print("[推送] 强制推送已启用 (FORCE_PUSH)，跳过时段与去重限制")
+            else:
+                if not schedule.push:
+                    print("[推送] 调度器: 当前时间段不执行推送")
                     return False
-                else:
-                    print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次推送")
+
+                if schedule.once_push and schedule.period_key:
+                    scheduler = self.ctx.create_scheduler()
+                    date_str = self.ctx.format_date()
+                    if scheduler.already_executed(schedule.period_key, "push", date_str):
+                        print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已推送过，跳过")
+                        return False
+                    else:
+                        print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次推送")
 
             # AI 分析：优先使用传入的结果，避免重复分析
             if ai_result is None:
@@ -1003,6 +1060,21 @@ class NewsAnalyzer:
                     scheduler = self.ctx.create_scheduler()
                     date_str = self.ctx.format_date()
                     scheduler.record_execution(schedule.period_key, "push", date_str)
+
+                # 保存当日推送快照（任意模式，按 snapshot_mode 分桶）
+                if carryover_enabled:
+                    try:
+                        storage_manager = self.ctx.get_storage_manager()
+                        payload = build_snapshot_payload(stats, rss_items)
+                        storage_manager.save_push_snapshot(
+                            mode=snapshot_mode,
+                            snapshot_date=current_date_str,
+                            scope_key=scope_key,
+                            payload=payload,
+                        )
+                        print(f"[推送][快照] 已保存当日推送快照 (mode={snapshot_mode}, scope={scope_key}, date={current_date_str})")
+                    except Exception as snap_err:
+                        print(f"[推送][快照] 保存当日推送快照失败: {snap_err}")
 
             return True
 
@@ -2168,8 +2240,15 @@ def main():
         action="store_true",
         help="发送测试通知到已配置渠道"
     )
+    parser.add_argument(
+        "--force-push",
+        action="store_true",
+        help="忽略时段与去重限制，本次运行强制推送一次（仍受内容判定与渠道配置约束）"
+    )
 
     args = parser.parse_args()
+    if getattr(args, "force_push", False):
+        os.environ["FORCE_PUSH"] = "true"
 
     debug_mode = False
     try:
