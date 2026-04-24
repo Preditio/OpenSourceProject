@@ -26,6 +26,7 @@ from email.utils import formataddr, formatdate, make_msgid
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 from urllib.parse import urlparse
+import re
 
 import requests
 
@@ -614,6 +615,51 @@ def send_to_telegram(
     return True
 
 
+def _sanitize_html_for_email(html: str) -> str:
+    """
+    清洗网页版 HTML，去掉邮件客户端无意义的元素，避免大段空白；
+    并注入紧凑化样式覆盖。
+    """
+    # 1. 外链 / inline <script> 全部去掉
+    html = re.sub(r"<script\b[^>]*src=[^>]*></script>", "", html, flags=re.IGNORECASE)
+    html = re.sub(r"<script\b[^>]*>.*?</script>", "", html, flags=re.IGNORECASE | re.DOTALL)
+    # 2. 删除工具条 / 装饰元素
+    html = re.sub(r'<div\s+class="reading-progress"[^>]*></div>', "", html, flags=re.IGNORECASE)
+    html = re.sub(r'<div\s+class="header-watermark"[^>]*>.*?</div>', "", html, flags=re.IGNORECASE | re.DOTALL)
+    # save-buttons 内含嵌套 div，保守做法：贪婪到下一个 header-title 之前
+    html = re.sub(
+        r'<div\s+class="save-buttons".*?(?=<div\s+class="header-title")',
+        "",
+        html,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    # 3. 注入紧凑化覆盖样式
+    compact_css = """
+    /* === Email compact overrides === */
+    body { padding: 8px !important; background: #ffffff !important; }
+    .container { max-width: 720px !important; box-shadow: none !important; border-radius: 8px !important; }
+    .header { padding: 16px 20px !important; }
+    .header-title { font-size: 20px !important; }
+    .header-info { gap: 8px 14px !important; margin-top: 10px !important; }
+    .info-item { padding: 4px 8px !important; }
+    .rss-section, .standalone-section { margin-top: 18px !important; padding-top: 14px !important; }
+    .rss-section-header, .standalone-section-header { margin-bottom: 10px !important; }
+    .feed-group { margin-bottom: 14px !important; }
+    .feed-header { margin-bottom: 6px !important; padding-bottom: 4px !important; }
+    .rss-item { margin-bottom: 6px !important; padding: 8px 10px !important; border-radius: 6px !important; }
+    .rss-meta { margin-bottom: 2px !important; gap: 8px !important; }
+    .rss-title { font-size: 13.5px !important; line-height: 1.4 !important; margin-bottom: 2px !important; }
+    .rss-summary { font-size: 12.5px !important; line-height: 1.4 !important; -webkit-line-clamp: 2 !important; }
+    .ai-section { margin-top: 14px !important; padding-top: 10px !important; }
+    .ai-block { padding: 10px 12px !important; margin-bottom: 8px !important; }
+    .ai-block-title { font-size: 14px !important; margin-bottom: 4px !important; }
+    .ai-block-content { font-size: 13px !important; line-height: 1.55 !important; }
+    """
+    if "</style>" in html:
+        html = html.replace("</style>", compact_css + "\n</style>", 1)
+    return html
+
+
 def send_to_email(
     from_email: str,
     password: str,
@@ -652,6 +698,10 @@ def send_to_email(
         print(f"使用HTML文件: {html_file_path}")
         with open(html_file_path, "r", encoding="utf-8") as f:
             html_content = f.read()
+
+        # 邮件场景清洗：去掉网页版才有意义的 JS 控件 / 装饰元素，避免在邮件客户端
+        # 渲染成大段空白（导出按钮、阅读进度条、暗色切换、html2canvas 等）
+        html_content = _sanitize_html_for_email(html_content)
 
         domain = from_email.split("@")[-1].lower()
 

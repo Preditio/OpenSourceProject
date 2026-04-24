@@ -378,7 +378,7 @@ ai_filter:
   # 全量重分类触发阈值（0~1）
   # change_ratio >= 此值：全量重分类；否则增量更新
   # 0.0 最准确最费；1.0 最省但可能陈旧；0.6 是平衡点
-  reclassify_threshold: 0.6                # 平衡稳定性与适配性，避免无必要的全量重分类
+  reclassify_threshold: 0                  # 一次性强制重建标签与分类，跑完后恢复
 
   # 以下提示词模板一般无需修改（不建议动）
 
@@ -410,11 +410,11 @@ display:
   #   1. 在此列表中
   #   2. 下方 regions 中对应开关为 true
   region_order:
-    - new_items                           # 1️⃣ 新增热点区域
-    - rss                                 # 2️⃣ RSS 订阅区域
-    - hotlist                             # 3️⃣ 热榜区域（关键词匹配 / AI 智能筛选）
-    - standalone                          # 4️⃣ 独立展示区
-    - ai_analysis                         # 5️⃣ AI 分析区域
+    - ai_analysis                         # 1️⃣ AI 分析放在最顶部，方便先看结论
+    - new_items                           # 2️⃣ 新增热点区域
+    - rss                                 # 3️⃣ RSS 订阅区域
+    - hotlist                             # 4️⃣ 热榜区域（关键词匹配 / AI 智能筛选）
+    - standalone                          # 5️⃣ 独立展示区
 
   # 推送区域开关
   # 控制各区域是否启用（配合 region_order 使用）
