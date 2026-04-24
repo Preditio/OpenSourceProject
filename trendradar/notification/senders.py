@@ -615,45 +615,94 @@ def send_to_telegram(
     return True
 
 
+def _strip_balanced_div(html: str, start_marker: str) -> str:
+    """
+    从 start_marker 起点开始，删除一个 <div ...> 块及其内嵌套 div 平衡到的对应 </div>。
+    若未找到，原样返回。
+    """
+    idx = html.find(start_marker)
+    if idx < 0:
+        return html
+    i = idx + len(start_marker)
+    depth = 1
+    n = len(html)
+    while i < n and depth > 0:
+        next_open = html.find("<div", i)
+        next_close = html.find("</div>", i)
+        if next_close < 0:
+            return html
+        if 0 <= next_open < next_close:
+            depth += 1
+            i = next_open + 4
+        else:
+            depth -= 1
+            i = next_close + 6
+    return html[:idx] + html[i:]
+
+
 def _sanitize_html_for_email(html: str) -> str:
     """
-    清洗网页版 HTML，去掉邮件客户端无意义的元素，避免大段空白；
-    并注入紧凑化样式覆盖。
+    清洗网页版 HTML 用于邮件：
+      1. 去除 JS / 装饰元素（在邮件客户端无法执行或显示为大段空白）；
+      2. 用一行黑字 banner 替换原来的渐变 header（解决白底白字看不见的问题）；
+      3. 注入紧凑化 CSS，大幅压缩 RSS / AI / 独立源 等板块的占地。
     """
-    # 1. 外链 / inline <script> 全部去掉
+    # 1. 外链 / inline <script>
     html = re.sub(r"<script\b[^>]*src=[^>]*></script>", "", html, flags=re.IGNORECASE)
     html = re.sub(r"<script\b[^>]*>.*?</script>", "", html, flags=re.IGNORECASE | re.DOTALL)
-    # 2. 删除工具条 / 装饰元素
+    # 2. 阅读进度条
     html = re.sub(r'<div\s+class="reading-progress"[^>]*></div>', "", html, flags=re.IGNORECASE)
-    html = re.sub(r'<div\s+class="header-watermark"[^>]*>.*?</div>', "", html, flags=re.IGNORECASE | re.DOTALL)
-    # save-buttons 内含嵌套 div，保守做法：贪婪到下一个 header-title 之前
-    html = re.sub(
-        r'<div\s+class="save-buttons".*?(?=<div\s+class="header-title")',
-        "",
+
+    # 3. 提取生成时间，再整体替换 header
+    m = re.search(
+        r'<span class="info-label">\s*生成时间\s*</span>\s*<span class="info-value">\s*([^<]+?)\s*</span>',
         html,
-        flags=re.IGNORECASE | re.DOTALL,
     )
-    # 3. 注入紧凑化覆盖样式
+    gen_time = m.group(1).strip() if m else datetime.now().strftime("%m-%d %H:%M")
+    html = _strip_balanced_div(html, '<div class="header">')
+    banner_html = (
+        '<div class="email-banner" style="padding:10px 16px;border-bottom:1px solid #e5e7eb;'
+        'color:#111827;font-size:15px;font-weight:600;background:#ffffff;">'
+        f'今日热点推送 · 生成时间 {gen_time}</div>'
+    )
+    html = html.replace('<div class="container">', '<div class="container">' + banner_html, 1)
+
+    # 4. 注入紧凑化覆盖样式（追加在 </style> 之前）
     compact_css = """
     /* === Email compact overrides === */
-    body { padding: 8px !important; background: #ffffff !important; }
-    .container { max-width: 720px !important; box-shadow: none !important; border-radius: 8px !important; }
-    .header { padding: 16px 20px !important; }
-    .header-title { font-size: 20px !important; }
-    .header-info { gap: 8px 14px !important; margin-top: 10px !important; }
-    .info-item { padding: 4px 8px !important; }
-    .rss-section, .standalone-section { margin-top: 18px !important; padding-top: 14px !important; }
-    .rss-section-header, .standalone-section-header { margin-bottom: 10px !important; }
-    .feed-group { margin-bottom: 14px !important; }
-    .feed-header { margin-bottom: 6px !important; padding-bottom: 4px !important; }
-    .rss-item { margin-bottom: 6px !important; padding: 8px 10px !important; border-radius: 6px !important; }
-    .rss-meta { margin-bottom: 2px !important; gap: 8px !important; }
-    .rss-title { font-size: 13.5px !important; line-height: 1.4 !important; margin-bottom: 2px !important; }
-    .rss-summary { font-size: 12.5px !important; line-height: 1.4 !important; -webkit-line-clamp: 2 !important; }
-    .ai-section { margin-top: 14px !important; padding-top: 10px !important; }
-    .ai-block { padding: 10px 12px !important; margin-bottom: 8px !important; }
-    .ai-block-title { font-size: 14px !important; margin-bottom: 4px !important; }
-    .ai-block-content { font-size: 13px !important; line-height: 1.55 !important; }
+    body { padding: 6px !important; background: #ffffff !important; color: #111827 !important; }
+    .container { max-width: 760px !important; box-shadow: none !important; border-radius: 6px !important; border: 1px solid #e5e7eb !important; }
+    .content { padding: 10px 14px !important; }
+
+    /* 全局：所有板块顶部间距收紧 */
+    .rss-section, .standalone-section, .ai-section, .word-section { margin-top: 12px !important; padding-top: 8px !important; border-top: 1px solid #f1f5f9 !important; }
+    .rss-section-header, .standalone-section-header, .ai-section-header { margin-bottom: 6px !important; padding-bottom: 4px !important; }
+    .rss-section-title, .standalone-section-title, .ai-section-title { font-size: 15px !important; }
+    .rss-section-count, .standalone-section-count { font-size: 12px !important; }
+
+    /* RSS：大幅加密 */
+    .feed-group { margin-bottom: 8px !important; }
+    .feed-header { margin-bottom: 3px !important; padding-bottom: 2px !important; border-bottom-width: 1px !important; }
+    .feed-name { font-size: 13px !important; }
+    .feed-count { font-size: 11px !important; }
+    .rss-item { margin-bottom: 3px !important; padding: 5px 8px !important; border-radius: 4px !important; border-left-width: 2px !important; }
+    .rss-meta { margin-bottom: 1px !important; gap: 6px !important; }
+    .rss-time, .rss-author { font-size: 11px !important; }
+    .rss-title { font-size: 13px !important; line-height: 1.32 !important; margin-bottom: 1px !important; }
+    .rss-link { font-weight: 500 !important; }
+    .rss-summary { font-size: 12px !important; line-height: 1.35 !important; -webkit-line-clamp: 2 !important; color: #6b7280 !important; }
+
+    /* AI 分析：紧凑 */
+    .ai-block { padding: 6px 10px !important; margin-bottom: 5px !important; border-radius: 4px !important; }
+    .ai-block-title { font-size: 13px !important; margin-bottom: 2px !important; }
+    .ai-block-content { font-size: 12.5px !important; line-height: 1.5 !important; }
+    .ai-blocks-grid { gap: 6px !important; }
+
+    /* 独立源 */
+    .standalone-item { padding: 5px 8px !important; margin-bottom: 3px !important; }
+
+    /* 隐藏页面交互控件 */
+    .search-bar, .tab-bar, .save-buttons, .toggle-wide-btn, .toggle-dark-btn, .reading-progress { display: none !important; }
     """
     if "</style>" in html:
         html = html.replace("</style>", compact_css + "\n</style>", 1)

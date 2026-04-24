@@ -480,15 +480,21 @@ class NewsAnalyzer:
 
         # 调度系统决策
         if not schedule.analyze:
-            print("[AI] 调度器: 当前时间段不执行 AI 分析")
-            return None
+            if self.force_push:
+                print("[AI] 强制推送已启用，本时段虽未配置分析，仍强制执行 AI 分析")
+            else:
+                print("[AI] 调度器: 当前时间段不执行 AI 分析")
+                return None
 
         if schedule.once_analyze and schedule.period_key:
             scheduler = self.ctx.create_scheduler()
             date_str = self.ctx.format_date()
             if scheduler.already_executed(schedule.period_key, "analyze", date_str):
-                print(f"[AI] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已分析过，跳过")
-                return None
+                if self.force_push:
+                    print(f"[AI] 强制推送：时间段 {schedule.period_name or schedule.period_key} 今天已分析过，仍重新分析")
+                else:
+                    print(f"[AI] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天已分析过，跳过")
+                    return None
             else:
                 print(f"[AI] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次分析")
 
