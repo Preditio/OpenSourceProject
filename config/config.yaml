@@ -412,10 +412,7 @@ display:
   #   2. 下方 regions 中对应开关为 true
   region_order:
     - ai_analysis                         # 1️⃣ AI 分析放在最顶部，方便先看结论
-    - new_items                           # 2️⃣ 新增热点区域
-    - rss                                 # 3️⃣ RSS 订阅区域
-    - hotlist                             # 4️⃣ 热榜区域（关键词匹配 / AI 智能筛选）
-    - standalone                          # 5️⃣ 独立展示区
+    - rss                                 # 2️⃣ RSS 订阅区域
 
   # 推送区域开关
   # 控制各区域是否启用（配合 region_order 使用）
