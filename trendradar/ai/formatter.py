@@ -58,10 +58,6 @@ def _format_list_content(text: str) -> str:
     # 用 (?=[^\s:：]) 避免正则回溯将冒号误判为"内容"而拆开 【tag】：
     result = re.sub(r'(【[^】]+】[:：]?)[ \t]*(?=[^\s:：])', r'\1\n', result)
 
-    # 7. 在列表项之间增加视觉空行（排除版本号/小数）
-    # 排除 【标签】 行（以】结尾）和子标题行（以冒号结尾）之后的情况，避免标题与首项之间出现空行
-    result = re.sub(r'(?<![:：】])\n(\d+\.)(?!\d)', r'\n\n\1', result)
-
     return result
 
 
@@ -428,7 +424,7 @@ def render_ai_analysis_html_rich(result: AIAnalysisResult) -> str:
         content_html = _escape_html(content).replace("\n", "<br>")
         ai_html += f"""
                     <div class="ai-block">
-                        <div class="ai-block-title">RSS 深度洞察</div>
+                        <div class="ai-block-title">要点速览</div>
                         <div class="ai-block-content">{content_html}</div>
                     </div>"""
 
