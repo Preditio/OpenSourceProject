@@ -44,6 +44,11 @@ on:
         type: boolean
         required: false
         default: false
+      test_mode:
+        description: "测试模式（使用 EMAIL_TO_TEST 收件人，仅发给自己）"
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: crawler-${{ github.ref_name }}
@@ -150,7 +155,12 @@ jobs:
           WEWORK_MSG_TYPE: ${{ secrets.WEWORK_MSG_TYPE }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          # 收件人选择规则：
+          # 1. 手动触发并勾选 test_mode → EMAIL_TO_TEST
+          # 2. 非 master 分支（含 PR、feature 分支）→ EMAIL_TO_TEST
+          # 3. 其他情况（master 定时/正常推送）→ EMAIL_TO
+          # 若 EMAIL_TO_TEST 未配置，会回退为空（不会误发给所有收件人）
+          EMAIL_TO: ${{ ((github.event_name == 'workflow_dispatch' && inputs.test_mode) || github.ref_name != 'master') && secrets.EMAIL_TO_TEST || secrets.EMAIL_TO }}
           EMAIL_SMTP_SERVER: ${{ secrets.EMAIL_SMTP_SERVER }}
           EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
