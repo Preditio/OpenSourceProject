@@ -571,10 +571,11 @@ ai:
   # 完整列表: https://docs.litellm.ai/docs/providers
   # 如果你对于看英文文档比较头疼，那么可以点击页面右下角的 【Ask AI】 ,用中文询问怎么配置 
   
-  model: "openai/gpt-4o-mini"        # GitHub Models 免费模型（需配合下方 api_base）
-                                    # 可选其他 GitHub Models 模型（额度更宽裕但能力较弱）：
+  model: "openai/Llama-3.3-70B-Instruct"  # GitHub Models 免费，能力强且不受 Azure 内容策略限制
+                                    # 可选其他 GitHub Models 模型：
+                                    # model: "openai/gpt-4o-mini"            # OpenAI 4o-mini（受 Azure 内容策略限制）
                                     # model: "openai/Phi-4-mini-instruct"    # 微软 Phi-4，轻量免费
-                                    # model: "openai/Meta-Llama-3.1-8B-Instruct"  # Meta Llama，免费
+                                    # model: "openai/Meta-Llama-3.1-8B-Instruct"  # Llama 3.1 8B，免费
                                     # 如需切换其他服务商，注释掉 api_base 再改 model：
                                     # model: "gemini/gemini-2.0-flash"       # Google 免费 1500次/天
                                     # model: "deepseek/deepseek-chat"        # 极低价付费
