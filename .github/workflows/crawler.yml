@@ -39,16 +39,15 @@ on:
 
   workflow_dispatch:
     inputs:
-      force_push:
-        description: "强制推送（跳过时段与去重限制，仅本次运行生效）"
-        type: boolean
-        required: false
-        default: false
-      test_mode:
-        description: "测试模式（使用 EMAIL_TO_TEST 收件人，仅发给自己）"
-        type: boolean
-        required: false
-        default: false
+      run_mode:
+        description: "运行模式"
+        type: choice
+        required: true
+        default: "normal"
+        options:
+          - "normal"          # 按调度正常运行（不强制推送）
+          - "force_all"       # 强制推送给所有人（EMAIL_TO）
+          - "force_test"      # 测试-强制推送给自己（EMAIL_TO_TEST）
 
 concurrency:
   group: crawler-${{ github.ref_name }}
@@ -156,11 +155,10 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           # 收件人选择规则：
-          # 1. 手动触发并勾选 test_mode → EMAIL_TO_TEST
-          # 2. 非 master 分支（含 PR、feature 分支）→ EMAIL_TO_TEST
-          # 3. 其他情况（master 定时/正常推送）→ EMAIL_TO
-          # 若 EMAIL_TO_TEST 未配置，会回退为空（不会误发给所有收件人）
-          EMAIL_TO: ${{ ((github.event_name == 'workflow_dispatch' && inputs.test_mode) || github.ref_name != 'master') && secrets.EMAIL_TO_TEST || secrets.EMAIL_TO }}
+          # 1. 手动触发并选择 force_test → EMAIL_TO_TEST（仅发给自己）
+          # 2. 非 master 分支（feature 分支等）→ EMAIL_TO_TEST
+          # 3. 其他情况 → EMAIL_TO
+          EMAIL_TO: ${{ ((github.event_name == 'workflow_dispatch' && inputs.run_mode == 'force_test') || github.ref_name != 'master') && secrets.EMAIL_TO_TEST || secrets.EMAIL_TO }}
           EMAIL_SMTP_SERVER: ${{ secrets.EMAIL_SMTP_SERVER }}
           EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
@@ -183,6 +181,6 @@ jobs:
           S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
           S3_REGION: ${{ secrets.S3_REGION }}
           GITHUB_ACTIONS: true
-          # 仅手动触发且勾选 force_push 时生效；schedule 触发时不会传入 inputs，默认为空。
-          FORCE_PUSH: ${{ github.event_name == 'workflow_dispatch' && inputs.force_push && 'true' || 'false' }}
+          # 当 run_mode 为 force_all 或 force_test 时启用强制推送；schedule 触发时为 normal。
+          FORCE_PUSH: ${{ (github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'force_all' || inputs.run_mode == 'force_test')) && 'true' || 'false' }}
         run: uv run python -m trendradar
