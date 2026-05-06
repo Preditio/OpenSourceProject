@@ -461,9 +461,8 @@ custom:
 
     evening_summary:
       name: "晚间汇总"
-      start: "11:00"               # UTC 11:00 = 北京时间 19:00
-      end: "14:00"                 # UTC 14:00 = 北京时间 22:00
-      # 窗口包含 UTC 12:00 的 cron 触发，确保每天稳定推送一次
+      start: "19:00"               # 北京时间（项目 TIMEZONE）
+      end: "22:00"                 # 窗口包含北京 20:00 = UTC 12:00 cron 触发，每天稳定推送一次
       # frequency_file: "xxx.txt"               # 关键词文件（可选，位于 config/custom/keyword/）
       # interests_file: "xxx.txt"                # AI 兴趣文件（可选，位于 config/custom/ai/）
       # filter_method: "keyword"                # 筛选策略（可选: keyword | ai，不填用全局 filter.method）
