@@ -45,9 +45,9 @@ on:
         required: true
         default: "normal"
         options:
-          - "normal"          # 按调度正常运行（不强制推送）
-          - "force_all"       # 强制推送给所有人（EMAIL_TO）
-          - "force_test"      # 测试-强制推送给自己（EMAIL_TO_TEST）
+          - "normal"               # 按调度正常运行（不强制推送）
+          - "force_test_all"       # 强制推送给所有人（EMAIL_TO）
+          - "force_test_me_only"   # 强制推送给自己（EMAIL_TO_TEST）
 
 concurrency:
   group: crawler-${{ github.ref_name }}
@@ -155,10 +155,10 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           # 收件人选择规则：
-          # 1. 手动触发并选择 force_test → EMAIL_TO_TEST（仅发给自己）
+          # 1. 手动触发并选择 force_test_me_only → EMAIL_TO_TEST（仅发给自己）
           # 2. 非 master 分支（feature 分支等）→ EMAIL_TO_TEST
           # 3. 其他情况 → EMAIL_TO
-          EMAIL_TO: ${{ ((github.event_name == 'workflow_dispatch' && inputs.run_mode == 'force_test') || github.ref_name != 'master') && secrets.EMAIL_TO_TEST || secrets.EMAIL_TO }}
+          EMAIL_TO: ${{ ((github.event_name == 'workflow_dispatch' && inputs.run_mode == 'force_test_me_only') || github.ref_name != 'master') && secrets.EMAIL_TO_TEST || secrets.EMAIL_TO }}
           EMAIL_SMTP_SERVER: ${{ secrets.EMAIL_SMTP_SERVER }}
           EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
@@ -181,6 +181,6 @@ jobs:
           S3_ENDPOINT_URL: ${{ secrets.S3_ENDPOINT_URL }}
           S3_REGION: ${{ secrets.S3_REGION }}
           GITHUB_ACTIONS: true
-          # 当 run_mode 为 force_all 或 force_test 时启用强制推送；schedule 触发时为 normal。
-          FORCE_PUSH: ${{ (github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'force_all' || inputs.run_mode == 'force_test')) && 'true' || 'false' }}
+          # 当 run_mode 为 force_test_all 或 force_test_me_only 时启用强制推送；schedule 触发时为 normal。
+          FORCE_PUSH: ${{ (github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'force_test_all' || inputs.run_mode == 'force_test_me_only')) && 'true' || 'false' }}
         run: uv run python -m trendradar
