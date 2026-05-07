@@ -275,6 +275,38 @@ rss:
       url: "https://iapp.org/feed/"
       enabled: false                  # IAPP 无公开 RSS，已确认不可用
       max_age_days: 30
+
+    # ── 中国与亚洲媒体（中英文）─────────────────────────────────
+    - id: "xinhua-politics"
+      name: "新华社 - 时政"
+      url: "http://www.news.cn/politics/news_politics.xml"
+      max_age_days: 30
+
+    - id: "xinhua-world"
+      name: "新华社 - 国际"
+      url: "http://www.news.cn/world/news_world.xml"
+      max_age_days: 30
+
+    - id: "scmp-china-politics"
+      name: "SCMP - China Policies & Politics"
+      url: "https://www.scmp.com/rss/318198/feed"
+      max_age_days: 30
+
+    - id: "scmp-china-diplomacy"
+      name: "SCMP - China Diplomacy & Defence"
+      url: "https://www.scmp.com/rss/318199/feed"
+      max_age_days: 30
+
+    - id: "scmp-china-tech"
+      name: "SCMP - China Tech"
+      url: "https://www.scmp.com/rss/320663/feed"
+      max_age_days: 30
+
+    - id: "scmp-geopolitics"
+      name: "SCMP - Geopolitics (This Week in Asia)"
+      url: "https://www.scmp.com/rss/323047/feed"
+      max_age_days: 30
+
     # ── 综合新闻 ────────────────────────────────────────
     - id: "yahoo-news-world"
       name: "Yahoo News - World"
