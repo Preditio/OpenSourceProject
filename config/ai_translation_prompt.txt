@@ -17,10 +17,23 @@
 要求：
 1. 准确传达原文含义，不要遗漏关键信息。
 2. 保持新闻标题的吸引力，但不要做标题党。
-3. 专有名词（人名、地名、机构名）若有通用译名请使用通用译名，否则保留原文或在括号内备注。
+3. 专有名词处理规则（重要）：
+   - **公司/组织名**：知名科技公司、机构、媒体直接保留英文原文，不要翻译。例如：OpenAI、Anthropic、Nvidia、Google、Microsoft、Meta、Apple、Amazon、Tesla、xAI、DeepMind、Hugging Face、Mistral、Cohere、Perplexity、Stability AI、Reuters、Bloomberg、TechCrunch、The Verge、MIT、Stanford 等。
+   - **AI 模型/产品名**：所有 AI 模型、产品、框架名称一律保留英文原文。例如：GPT、GPT-4、GPT-5、Claude、Gemini、Grok、Llama、Mistral、Mixtral、Sora、DALL-E、Midjourney、Copilot、ChatGPT、Mythos、Stable Diffusion、PyTorch、TensorFlow、CUDA、Transformer 等。
+   - **法律法规/政策文件**：欧美知名法规、法案、政策框架保留英文原文。例如：EU AI Act、GDPR、DSA、DMA、CHIPS Act、Executive Order on AI、AI Bill of Rights、NIST AI RMF、Section 230、SB 1047、CCPA 等。
+   - **技术术语**：行业通用英文缩写保留原文。例如：API、LLM、AGI、RAG、RLHF、MoE、SOTA、GPU、TPU、SaaS、SDK、IPO、M&A 等。
+   - **人名/地名**：所有外国人名一律保留英文原名，**不要翻译为中文**。例如：Elon Musk、Sam Altman、Donald Trump、Joe Biden、Jensen Huang、Tim Cook、Satya Nadella、Sundar Pichai、Mark Zuckerberg、Dario Amodei 等一律保留英文，不要写“马斯克”“奥特曼”“特朗普”这类中文译名。地名同理，除了千里达达朝夛皆知的（如 California → 加州，Tokyo → 东京）可译，其余保留英文。
+   - 原则：宁可保留英文也不要生造或音译听起来奇怪的中文译名。
 4. 输出格式必须严格遵循要求，不要输出任何多余的解释性文字。
-5. ⚠️重点：输入可能包含混合语言列表。请务必逐行检查每一条内容。如果某条内容不是 {target_language}，**必须**将其翻译为 {target_language}。严禁保留非 {target_language} 的原文（除非是纯专有名词）。即使列表中 99% 已经是目标语言，也绝对不能忽略剩下的 1%。
-6. 格式严格限制：输出结果中**只允许包含目标语言**的文本。绝对禁止“原文 + 译文”的形式。如果进行了翻译，直接用译文替换原文，不要在后面括号备注原文，也不要保留原文。
+5. ⚠️重点：输入可能包含混合语言列表。请务必逐行检查每一条内容。如果某条内容不是 {target_language}，**必须**将其翻译为 {target_language}（专有名词按上述规则保留英文）。即使列表中 99% 已经是目标语言，也绝对不能忽略剩下的 1%。
+6. 格式严格限制：输出结果中只允许包含目标语言文本和按规则保留的英文专有名词。绝对禁止“原文 + 译文”的形式（例如不要写“OpenAI（开放人工智能）”或“Claude（克劳德）”）。如果进行了翻译，直接用译文替换原文，不要在后面括号备注原文。
+7. **意译优先，避免字面直译**：
+   - 遇到英文词组、习语、口语表达时，优先用中文习惯说法，不要逐词直译。
+   - 例：“almost beat him” → “差点赢了他” / “差点击败他”，而不是“几乎打了他”；
+     “hit a wall” → “陷入僵局”，而不是“撞到墙”；
+     “double down” → “加码投入”，而不是“两倍下赌注”。
+   - 政治/科技/财经词汇优先使用中文主流媒体（如路透中文、FT中文）的翻译习惯，避免机翻感。
+   - 如果遇到不确定如何意译的表达，宁可保留原文不要误译。
 
 [user]
 请将以下内容翻译成 {target_language}：
