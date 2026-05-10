@@ -254,14 +254,6 @@ rss:
       enabled: false                  # IAPP 无公开 RSS，已确认不可用
       max_age_days: 8
     # ── 中国与亚洲媒体（中英文）─────────────────────────────────
-    - id: "xinhua-politics"
-      name: "新华社 - 时政"
-      url: "http://www.news.cn/politics/news_politics.xml"
-      max_age_days: 8
-    - id: "xinhua-world"
-      name: "新华社 - 国际"
-      url: "http://www.news.cn/world/news_world.xml"
-      max_age_days: 8
     - id: "scmp-china-politics"
       name: "SCMP - China Policies & Politics"
       url: "https://www.scmp.com/rss/318198/feed"
