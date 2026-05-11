@@ -871,17 +871,27 @@ class NewsAnalyzer:
             )
 
         # AI 分析（如果启用，用于 HTML 报告）
+        # 注意：AI 输入按 display.regions 过滤，确保 summary 与推送展示的 Section 数据范围一致，
+        # 避免出现 "summary 提到但后面 Section 没有对应链接" 的情况。
         ai_result = None
         ai_config = self.ctx.config.get("AI_ANALYSIS", {})
-        if ai_config.get("ENABLED", False) and stats:
-            # 获取模式策略来确定报告类型
-            mode_strategy = self._get_mode_strategy()
-            report_type = mode_strategy["report_type"]
-            ai_result = self._run_ai_analysis(
-                stats, rss_items, mode, report_type, id_to_name,
-                current_results=data_source, schedule=schedule,
-                standalone_data=standalone_data
-            )
+        if ai_config.get("ENABLED", False) and (stats or rss_items):
+            display_regions_cfg = self.ctx.config.get("DISPLAY", {}).get("REGIONS", {})
+            ai_input_stats = stats if display_regions_cfg.get("HOTLIST", True) else []
+            ai_input_rss = rss_items if display_regions_cfg.get("RSS", True) else None
+            ai_input_standalone = standalone_data if display_regions_cfg.get("STANDALONE", False) else None
+
+            if ai_input_stats or ai_input_rss:
+                # 获取模式策略来确定报告类型
+                mode_strategy = self._get_mode_strategy()
+                report_type = mode_strategy["report_type"]
+                ai_result = self._run_ai_analysis(
+                    ai_input_stats, ai_input_rss, mode, report_type, id_to_name,
+                    current_results=data_source, schedule=schedule,
+                    standalone_data=ai_input_standalone
+                )
+            else:
+                print("[AI] 跳过分析：display.regions 过滤后无可用数据")
 
         # 翻译 RSS 内容（如果启用）— 在 HTML 生成前执行，确保网页版也能展示翻译内容
         # 注意：仅翻译 rss_items 和 rss_new_items，不翻译 standalone_data（通知前会重新生成）
@@ -1019,13 +1029,22 @@ class NewsAnalyzer:
                         print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次推送")
 
             # AI 分析：优先使用传入的结果，避免重复分析
+            # 兜底分支同样按 display.regions 过滤输入，与推送展示数据范围保持一致
             if ai_result is None:
                 ai_config = cfg.get("AI_ANALYSIS", {})
                 if ai_config.get("ENABLED", False):
-                    ai_result = self._run_ai_analysis(
-                        stats, rss_items, mode, report_type, id_to_name,
-                        current_results=current_results, schedule=schedule
-                    )
+                    display_regions_cfg = cfg.get("DISPLAY", {}).get("REGIONS", {})
+                    ai_input_stats = stats if display_regions_cfg.get("HOTLIST", True) else []
+                    ai_input_rss = rss_items if display_regions_cfg.get("RSS", True) else None
+                    ai_input_standalone = standalone_data if display_regions_cfg.get("STANDALONE", False) else None
+                    if ai_input_stats or ai_input_rss:
+                        ai_result = self._run_ai_analysis(
+                            ai_input_stats, ai_input_rss, mode, report_type, id_to_name,
+                            current_results=current_results, schedule=schedule,
+                            standalone_data=ai_input_standalone,
+                        )
+                    else:
+                        print("[AI] 跳过分析：display.regions 过滤后无可用数据")
 
             # 准备报告数据
             report_data = self.ctx.prepare_report(stats, failed_ids, new_titles, id_to_name, mode, frequency_file=self.frequency_file)
