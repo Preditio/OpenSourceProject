@@ -254,6 +254,10 @@ rss:
       enabled: false                  # IAPP 无公开 RSS，已确认不可用
       max_age_days: 8
     # ── 中国与亚洲媒体（中英文）─────────────────────────────────
+    - id: "chinanews-china"
+      name: "中国新闻网 - 国内时政"
+      url: "https://www.chinanews.com.cn/rss/china.xml"
+      max_age_days: 8                 # /gn/ 频道，外交部官宣等首发在此
     - id: "chinanews-importnews"
       name: "中国新闻网 - 要闻"
       url: "https://www.chinanews.com.cn/rss/importnews.xml"
