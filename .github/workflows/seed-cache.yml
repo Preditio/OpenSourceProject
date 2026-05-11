@@ -1,0 +1,97 @@
+name: Seed Push Cache
+
+# 一次性手动触发的 workflow：在 cache 里预置一条"今天 evening_summary 已推送"记录，
+# 用于线上修复期间防止当天 evening 窗口重复推送。
+# 用完之后可以删除此文件，不影响主流程。
+
+on:
+  workflow_dispatch:
+    inputs:
+      period_key:
+        description: "要标记为已推送的 period key（默认 evening_summary）"
+        type: string
+        required: true
+        default: "evening_summary"
+      date:
+        description: "日期 YYYY-MM-DD（留空=北京时间今天）"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Restore existing cache (if any)
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: output
+          key: trendradar-seed-${{ github.run_id }}
+          restore-keys: |
+            trendradar-output-
+
+      - name: Resolve target date (Beijing time)
+        id: dt
+        run: |
+          if [ -n "${{ inputs.date }}" ]; then
+            DATE="${{ inputs.date }}"
+          else
+            DATE=$(TZ=Asia/Shanghai date +%Y-%m-%d)
+          fi
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "Target date (Asia/Shanghai): $DATE"
+
+      - name: Seed period_executions record
+        env:
+          TARGET_DATE: ${{ steps.dt.outputs.date }}
+          PERIOD_KEY: ${{ inputs.period_key }}
+        run: |
+          mkdir -p output/news
+          DB_FILE="output/news/${TARGET_DATE}.db"
+          python3 - <<'PY'
+          import os, sqlite3, datetime
+          date_str = os.environ["TARGET_DATE"]
+          period_key = os.environ["PERIOD_KEY"]
+          db_path = f"output/news/{date_str}.db"
+          conn = sqlite3.connect(db_path)
+          cur = conn.cursor()
+          cur.execute("""
+              CREATE TABLE IF NOT EXISTS period_executions (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  execution_date TEXT NOT NULL,
+                  period_key TEXT NOT NULL,
+                  action TEXT NOT NULL,
+                  executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                  UNIQUE(execution_date, period_key, action)
+              )
+          """)
+          now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
+          for action in ("push", "analyze"):
+              cur.execute(
+                  "INSERT OR IGNORE INTO period_executions (execution_date, period_key, action, executed_at) VALUES (?, ?, ?, ?)",
+                  (date_str, period_key, action, now),
+              )
+          conn.commit()
+          cur.execute("SELECT execution_date, period_key, action, executed_at FROM period_executions")
+          for row in cur.fetchall():
+              print("[seed] inserted:", row)
+          conn.close()
+          PY
+          echo "DB ready at $DB_FILE"
+          ls -la output/news/
+
+      - name: Save seeded cache
+        uses: actions/cache/save@v4
+        with:
+          path: output
+          # 使用与 crawler 同前缀的 key，下次 crawler 的 restore-keys: "trendradar-output-" 会命中
+          key: trendradar-output-seed-${{ steps.dt.outputs.date }}-${{ github.run_id }}
