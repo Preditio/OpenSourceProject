@@ -254,6 +254,18 @@ rss:
       enabled: false                  # IAPP 无公开 RSS，已确认不可用
       max_age_days: 8
     # ── 中国与亚洲媒体（中英文）─────────────────────────────────
+    - id: "chinanews-importnews"
+      name: "中国新闻网 - 要闻"
+      url: "https://www.chinanews.com.cn/rss/importnews.xml"
+      max_age_days: 8
+    - id: "chinanews-world"
+      name: "中国新闻网 - 国际"
+      url: "https://www.chinanews.com.cn/rss/world.xml"
+      max_age_days: 8
+    - id: "chinanews-scroll"
+      name: "中国新闻网 - 滚动"
+      url: "https://www.chinanews.com.cn/rss/scroll-news.xml"
+      max_age_days: 8
     - id: "scmp-china-politics"
       name: "SCMP - China Policies & Politics"
       url: "https://www.scmp.com/rss/318198/feed"
