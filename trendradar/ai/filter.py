@@ -337,11 +337,18 @@ class AIFilter:
             for t in tags
         )
 
-        # 构建新闻列表文本
-        news_list = "\n".join(
-            f"{t['id']}. [{t.get('source', '')}] {t['title']}"
-            for t in titles
-        )
+        # 构建新闻列表文本（如有摘要，附加在标题后，最长 160 字符）
+        def _format_news_line(t: Dict) -> str:
+            line = f"{t['id']}. [{t.get('source', '')}] {t['title']}"
+            summary = (t.get("summary") or "").strip()
+            if summary:
+                # 摘要截断，避免 prompt 膨胀
+                if len(summary) > 160:
+                    summary = summary[:160].rstrip() + "..."
+                line += f" — {summary}"
+            return line
+
+        news_list = "\n".join(_format_news_line(t) for t in titles)
 
         # 填充模板
         user_prompt = self.classify_user

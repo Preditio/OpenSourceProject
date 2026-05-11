@@ -782,7 +782,11 @@ class AppContext:
                 time.sleep(batch_interval)
             batch = pending_rss[i:i + batch_size]
             titles_for_ai = [
-                {"id": n["id"], "title": n["title"], "source": n.get("source_name", "")}
+                {
+                    "id": n["id"], "title": n["title"],
+                    "source": n.get("source_name", ""),
+                    "summary": n.get("summary", ""),
+                }
                 for n in batch
             ]
             batch_results = ai_filter.classify_batch(titles_for_ai, active_tags, interests_content)
@@ -1067,6 +1071,7 @@ class AppContext:
                     "is_new": is_new,
                     "time_display": time_display,
                     "matched_keyword": tag_name,
+                    "summary": item.get("summary", ""),
                 }
 
                 if source_type == "rss":

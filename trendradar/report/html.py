@@ -1607,7 +1607,18 @@ def render_html_content(
                     rss_html += escaped_title
 
                 rss_html += """
-                            </div>
+                            </div>"""
+
+                # 显示摘要（如果存在）
+                summary = title_data.get("summary", "")
+                if summary:
+                    summary_text = summary.strip()
+                    # 截断过长摘要避免邮件膨胀（CSS 已限制为 2 行省略）
+                    if len(summary_text) > 220:
+                        summary_text = summary_text[:220].rstrip() + "..."
+                    rss_html += f'<div class="rss-summary">{html_escape(summary_text)}</div>'
+
+                rss_html += """
                         </div>"""
 
             rss_html += """
