@@ -143,6 +143,22 @@ jobs:
             exit 1
           fi
 
+      # --------------------------------------------------------------------------------
+      # 🔁 Restore previous output (SQLite + 推送去重状态)
+      # --------------------------------------------------------------------------------
+      # 把上一次 run 留下的 output/ 目录拉回来，关键作用是恢复 SQLite 里的
+      # period_executions 表，避免同一时间窗（如晚间汇总）被重复推送。
+      # primary key 用 run_id 保证唯一；restore-keys 走前缀匹配拿到最近一次。
+      - name: Restore output cache (SQLite & push state)
+        if: success()
+        id: restore-output
+        uses: actions/cache/restore@v4
+        with:
+          path: output
+          key: trendradar-output-${{ github.run_id }}
+          restore-keys: |
+            trendradar-output-
+
       - name: Run crawler
         if: success()
         env:
@@ -184,3 +200,13 @@ jobs:
           # 当 run_mode 为 force_test_all 或 force_test_me_only 时启用强制推送；schedule 触发时为 normal。
           FORCE_PUSH: ${{ (github.event_name == 'workflow_dispatch' && (inputs.run_mode == 'force_test_all' || inputs.run_mode == 'force_test_me_only')) && 'true' || 'false' }}
         run: uv run python -m trendradar
+
+      # --------------------------------------------------------------------------------
+      # 💾 Save output cache（即便推送失败也保存，保留已抓取的 DB 与推送状态）
+      # --------------------------------------------------------------------------------
+      - name: Save output cache (SQLite & push state)
+        if: always() && hashFiles('output/**/*.db') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: output
+          key: trendradar-output-${{ github.run_id }}
