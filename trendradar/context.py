@@ -1080,8 +1080,6 @@ class AppContext:
                     hotlist_titles.append(title_entry)
 
             if hotlist_titles:
-                # NEW 标题置顶（组内保持原相对顺序）
-                hotlist_titles.sort(key=lambda x: 0 if x.get("is_new") else 1)
                 if max_news > 0:
                     hotlist_titles = hotlist_titles[:max_news]
                 hotlist_stats.append({
@@ -1092,8 +1090,6 @@ class AppContext:
                 })
 
             if rss_titles:
-                # NEW 标题置顶（组内保持原相对顺序）
-                rss_titles.sort(key=lambda x: 0 if x.get("is_new") else 1)
                 if max_news > 0:
                     rss_titles = rss_titles[:max_news]
                 rss_stats.append({

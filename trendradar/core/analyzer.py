@@ -438,11 +438,10 @@ def count_word_frequency(
         for source_id, title_list in data["titles"].items():
             all_titles.extend(title_list)
 
-        # 按权重排序，is_new 始终置顶
+        # 按权重排序
         sorted_titles = sorted(
             all_titles,
             key=lambda x: (
-                0 if x.get("is_new") else 1,
                 -calculate_news_weight(x, rank_threshold, weight_config),
                 min(x["ranks"]) if x["ranks"] else 999,
                 -x["count"],
@@ -673,13 +672,10 @@ def count_rss_frequency(
         if data["count"] == 0:
             continue
 
-        # 按发布时间排序（最新在前），is_new 始终置顶
+        # 按发布时间排序（最新在前）
         sorted_titles = sorted(
             data["titles"],
-            key=lambda x: (
-                0 if x.get("is_new") else 1,
-                x["ranks"][0] if x["ranks"] else 999,
-            ),
+            key=lambda x: x["ranks"][0] if x["ranks"] else 999
         )
 
         # 应用最大显示数量限制
