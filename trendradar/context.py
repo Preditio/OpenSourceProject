@@ -989,6 +989,20 @@ class AppContext:
                     pass
 
         filtered_count = 0
+        tech_filtered_count = 0
+        # 技术类标签关键词（标签名含其中任一即视为"技术类复合标签"，须做硬约束）
+        tech_tag_keywords = ("AI", "算法", "大模型", "数据", "隐私", "半导体", "自动驾驶",
+                             "量子", "芯片", "生成式", "GPT", "LLM", "AGI", "人工智能",
+                             "神经网络", "机器学习", "深度学习")
+        # 标题/摘要必须命中以下任一技术词才允许进入技术类标签
+        tech_topic_terms = ("AI", "ai", "算法", "大模型", "模型", "数据", "隐私",
+                            "半导体", "自动驾驶", "量子", "芯片", "生成式",
+                            "GPT", "ChatGPT", "Claude", "Gemini", "Llama", "Sora",
+                            "OpenAI", "Anthropic", "DeepMind", "Mistral", "xAI",
+                            "LLM", "AGI", "RAG", "RLHF",
+                            "人工智能", "机器学习", "深度学习", "神经网络",
+                            "算力", "训练", "推理芯片", "数据中心", "GPU", "TPU")
+
         for tag_data in ai_filter_result.tags:
             tag_name = tag_data.get("tag", "")
             items = tag_data.get("items", [])
@@ -998,8 +1012,18 @@ class AppContext:
             hotlist_titles = []
             rss_titles = []
 
+            # 判断当前标签是否为"技术类复合标签"（标签名含技术主题词）
+            is_tech_tag = any(kw in tag_name for kw in tech_tag_keywords)
+
             for item in items:
                 source_type = item.get("source_type", "hotlist")
+
+                # 硬约束：技术类标签的标题/摘要必须出现技术主题词
+                if is_tech_tag:
+                    haystack = f"{item.get('title', '')} {item.get('summary', '')}"
+                    if not any(term in haystack for term in tech_topic_terms):
+                        tech_filtered_count += 1
+                        continue
 
                 # current 模式：跳过已下榜的热榜新闻
                 if mode == "current" and latest_time and source_type == "hotlist":
@@ -1080,6 +1104,8 @@ class AppContext:
                     hotlist_titles.append(title_entry)
 
             if hotlist_titles:
+                # NEW 标题置顶（组内保持原相对顺序）
+                hotlist_titles.sort(key=lambda x: 0 if x.get("is_new") else 1)
                 if max_news > 0:
                     hotlist_titles = hotlist_titles[:max_news]
                 hotlist_stats.append({
@@ -1090,6 +1116,8 @@ class AppContext:
                 })
 
             if rss_titles:
+                # NEW 标题置顶（组内保持原相对顺序）
+                rss_titles.sort(key=lambda x: 0 if x.get("is_new") else 1)
                 if max_news > 0:
                     rss_titles = rss_titles[:max_news]
                 rss_stats.append({
@@ -1102,6 +1130,9 @@ class AppContext:
         if mode == "current" and filtered_count > 0:
             total_kept = sum(s["count"] for s in hotlist_stats)
             print(f"[AI筛选] current 模式：过滤 {filtered_count} 条已下榜新闻，保留 {total_kept} 条当前在榜")
+
+        if tech_filtered_count > 0:
+            print(f"[AI筛选] 技术标签硬约束：过滤 {tech_filtered_count} 条标题无技术主题词的条目")
 
         if min_score > 0:
             hotlist_kept = sum(s["count"] for s in hotlist_stats)
