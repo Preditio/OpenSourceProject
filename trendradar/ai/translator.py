@@ -266,6 +266,12 @@ class AITranslator:
                     translated.append(stripped)
             raw_parsed_count = len(translated)
 
+        # 兜底：剥离常见的编号前缀（如 "1. "、"1、"、"(1) "、"1) "、"[1] "）
+        # 主路径只处理 [N]，模型有时会改用其他编号格式，需统一清理
+        import re as _re
+        _num_prefix = _re.compile(r'^\s*(?:\[\s*\d+\s*\]|\(\s*\d+\s*\)|\d+\s*[.\u3001\)：:])\s*')
+        translated = [_num_prefix.sub('', t) for t in translated]
+
         # 确保返回正确数量
         while len(translated) < expected_count:
             translated.append("")
