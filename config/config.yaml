@@ -178,7 +178,7 @@ rss:
     - id: "the-guardian"
       name: "The Guardian - International"
       url: "https://www.theguardian.com/international/rss"
-      enabled: false                  # 用户禁用：内容质量不符合关注方向
+      enabled: false                  # 暂停：避免历史条目继续在邮件中出现
       max_age_days: 8
     - id: "the-times-uk"
       name: "The Times (UK)"
