@@ -17,6 +17,11 @@ jobs:
       actions: write
       contents: read
     steps:
+      - name: Re-enable crawler workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable crawler.yml --repo ${{ github.repository }}
+
       - name: Delete all workflow runs
         uses: Mattraks/delete-workflow-runs@v2
         with:
