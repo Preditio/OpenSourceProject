@@ -105,7 +105,7 @@ rss:
   freshness_filter:
     enabled: true                     # 是否启用新鲜度过滤（默认启用）
 
-    max_age_days: 8                   # 最大文章年龄（天）8 天窗口
+    max_age_days: 3                   # 最大文章年龄（天）3 天窗口
                                       # - 正整数：只推送 N 天内的文章
                                       # - 0：禁用过滤，推送所有文章
 
@@ -132,63 +132,63 @@ rss:
     - id: "whitehouse"
       name: "White House"
       url: "https://www.whitehouse.gov/news/feed/"
-      max_age_days: 8
+      max_age_days: 3
     - id: "whitehouse-briefing"
       name: "White House Briefing Room"
       url: "https://www.whitehouse.gov/briefings-statements/feed/"
-      max_age_days: 8
+      max_age_days: 3
     - id: "congress-gov"
       name: "Congress.gov Notifications"
       url: "https://www.congress.gov/rss/notification.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "wsj-world"
       name: "The Wall Street Journal - World"
       url: "https://feeds.a.dj.com/rss/RSSWorldNews.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "cnn-top"
       name: "CNN - Top Stories"
       url: "http://rss.cnn.com/rss/edition.rss"
-      max_age_days: 8
+      max_age_days: 3
     - id: "usnews"
       name: "U.S. News"
       url: "https://www.usnews.com/rss/news"
-      max_age_days: 8
+      max_age_days: 3
     - id: "nytimes-world"
       name: "The New York Times - World"
       url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "washington-post-world"
       name: "The Washington Post - World"
       url: "https://www.washingtonpost.com/arcio/rss/"
-      max_age_days: 8
+      max_age_days: 3
     - id: "ap-top"
       name: "Associated Press - Top News"
       url: "https://feeds.apnews.com/apf-topnews"
       enabled: false                  # AP News 已不再提供 RSS
-      max_age_days: 8
+      max_age_days: 3
     # ── 英国主流媒体（英文）────────────────────────────────────
     - id: "bbc-tech"
       name: "BBC Technology"
       url: "http://feeds.bbci.co.uk/news/technology/rss.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "financial-times"
       name: "Financial Times"
       url: "https://www.ft.com/rss/home"
-      max_age_days: 8
+      max_age_days: 3
     - id: "the-guardian"
       name: "The Guardian - International"
       url: "https://www.theguardian.com/international/rss"
       enabled: false                  # 暂停：避免历史条目继续在邮件中出现
-      max_age_days: 8
+      max_age_days: 3
     - id: "the-times-uk"
       name: "The Times (UK)"
       url: "https://www.thetimes.com/?format=rss"
       enabled: false                  # 返回 HTML 而非 RSS，无法解析
-      max_age_days: 8
+      max_age_days: 3
     - id: "sky-news"
       name: "Sky News"
       url: "https://feeds.skynews.com/feeds/rss/home.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "reuters-tech"
       name: "Reuters Technology"
       url: "https://feeds.reuters.com/reuters/technologyNews"
@@ -198,35 +198,35 @@ rss:
     - id: "euractiv-digital"
       name: "EURACTIV Digital"
       url: "https://www.euractiv.com/feed/"
-      max_age_days: 8
+      max_age_days: 3
     - id: "eu-commission-press"
       name: "European Commission Press"
       url: "https://ec.europa.eu/commission/presscorner/api/rss"
-      max_age_days: 8
+      max_age_days: 3
     - id: "eu-digital-strategy"
       name: "EU Digital Strategy"
       url: "https://digital-strategy.ec.europa.eu/en/rss.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "politico-eu"
       name: "POLITICO Europe"
       url: "https://www.politico.eu/feed/"
-      max_age_days: 8
+      max_age_days: 3
     - id: "dw-english"
       name: "DW - English"
       url: "https://rss.dw.com/rdf/rss-en-all"
-      max_age_days: 8
+      max_age_days: 3
     - id: "france24-en"
       name: "France 24 - English"
       url: "https://www.france24.com/en/rss"
-      max_age_days: 8
+      max_age_days: 3
     - id: "euronews-en"
       name: "Euronews - English"
       url: "https://www.euronews.com/rss?level=program&name=news"
-      max_age_days: 8
+      max_age_days: 3
     - id: "the-economist"
       name: "The Economist"
       url: "https://www.economist.com/the-world-this-week/rss.xml"
-      max_age_days: 8
+      max_age_days: 3
     # ── 主流外文科技媒体 ────────────────────────────────────────
     - id: "mit-tech-review"
       name: "MIT Technology Review"
@@ -253,45 +253,45 @@ rss:
       name: "IAPP (Privacy Professionals)"
       url: "https://iapp.org/feed/"
       enabled: false                  # IAPP 无公开 RSS，已确认不可用
-      max_age_days: 8
+      max_age_days: 3
     # ── 中国与亚洲媒体（中英文）─────────────────────────────────
     - id: "chinanews-china"
       name: "中国新闻网 - 国内时政"
       url: "https://www.chinanews.com.cn/rss/china.xml"
-      max_age_days: 8                 # /gn/ 频道，外交部官宣等首发在此
+      max_age_days: 3                 # /gn/ 频道，外交部官宣等首发在此
     - id: "chinanews-importnews"
       name: "中国新闻网 - 要闻"
       url: "https://www.chinanews.com.cn/rss/importnews.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "chinanews-world"
       name: "中国新闻网 - 国际"
       url: "https://www.chinanews.com.cn/rss/world.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "chinanews-scroll"
       name: "中国新闻网 - 滚动"
       url: "https://www.chinanews.com.cn/rss/scroll-news.xml"
-      max_age_days: 8
+      max_age_days: 3
     - id: "scmp-china-politics"
       name: "SCMP - China Policies & Politics"
       url: "https://www.scmp.com/rss/318198/feed"
-      max_age_days: 8
+      max_age_days: 3
     - id: "scmp-china-diplomacy"
       name: "SCMP - China Diplomacy & Defence"
       url: "https://www.scmp.com/rss/318199/feed"
-      max_age_days: 8
+      max_age_days: 3
     - id: "scmp-china-tech"
       name: "SCMP - China Tech"
       url: "https://www.scmp.com/rss/320663/feed"
-      max_age_days: 8
+      max_age_days: 3
     - id: "scmp-geopolitics"
       name: "SCMP - Geopolitics (This Week in Asia)"
       url: "https://www.scmp.com/rss/323047/feed"
-      max_age_days: 8
+      max_age_days: 3
     # ── 综合新闻 ────────────────────────────────────────
     - id: "yahoo-news-world"
       name: "Yahoo News - World"
       url: "https://news.yahoo.com/rss/world"
-      max_age_days: 8
+      max_age_days: 3
     # 自定义源示例
     # - id: "custom-feed"
     #   name: "自定义源"
@@ -775,3 +775,4 @@ advanced:
     slack: 4000
   batch_send_interval: 3              # 批次发送间隔（秒）
   feishu_message_separator: "━━━━━━━━━━━━━━━━"
+
