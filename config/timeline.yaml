@@ -413,7 +413,7 @@ custom:
                                    #   current       → 强制当前榜单
                                    #   incremental   → 强制增量模式
     push: false                    # 是否发送推送通知
-    report_mode: "current"         # 报告模式:
+    report_mode: "daily"           # 报告模式:
                                    #   daily       → 当日所有新闻的汇总
                                    #   current     → 当前在榜的新闻
                                    #   incremental → 只推送新增内容
