@@ -842,6 +842,9 @@ class NewsAnalyzer:
                 )
                 total_titles = sum(len(titles) for titles in data_source.values())
 
+                # 第二段重分类（可选）：对最终展示集按真实内容重新聚类并动态命名
+                stats, ai_rss_stats = self.ctx.recluster_report_stats(stats, ai_rss_stats)
+
                 # AI 筛选的 RSS 结果替换关键词匹配的 RSS 结果
                 if ai_rss_stats:
                     rss_items = ai_rss_stats
