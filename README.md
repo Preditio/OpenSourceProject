@@ -12,8 +12,10 @@
 [![GitHub Stars](https://img.shields.io/github/stars/sansan0/TrendRadar?style=flat-square&logo=github&color=yellow)](https://github.com/sansan0/TrendRadar/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/sansan0/TrendRadar?style=flat-square&logo=github&color=blue)](https://github.com/sansan0/TrendRadar/network/members)
 [![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg?style=flat-square)](LICENSE)
-[![Version](https://img.shields.io/badge/version-v6.6.2-blue.svg)](https://github.com/sansan0/TrendRadar)
-[![MCP](https://img.shields.io/badge/MCP-v4.0.2-green.svg)](https://github.com/sansan0/TrendRadar)
+[![Version](https://img.shields.io/badge/version-v6.9.1-blue.svg)](https://github.com/sansan0/TrendRadar)
+[![MCP](https://img.shields.io/badge/MCP-v4.1.0-green.svg)](https://github.com/sansan0/TrendRadar)
+[![Docker Pulls](https://img.shields.io/docker/pulls/wantcat/trendradar?style=flat-square&logo=docker&logoColor=white&label=TrendRadar%20Pulls&color=2496ED)](https://hub.docker.com/r/wantcat/trendradar)
+[![Docker Pulls](https://img.shields.io/docker/pulls/wantcat/trendradar-mcp?style=flat-square&logo=docker&logoColor=white&label=MCP%20Pulls&color=2496ED)](https://hub.docker.com/r/wantcat/trendradar-mcp)
 [![RSS](https://img.shields.io/badge/RSS-订阅源支持-orange.svg?style=flat-square&logo=rss&logoColor=white)](https://github.com/sansan0/TrendRadar)
 [![AI翻译](https://img.shields.io/badge/AI-多语言推送-purple.svg?style=flat-square)](https://github.com/sansan0/TrendRadar)
 
@@ -187,6 +189,8 @@
 <div align="center">
 
 > **虚位以待**
+>
+> 有意赞助？在微信公众号中触发自动回复，即可获取我的联系方式
 
 </div>
 
@@ -241,14 +245,10 @@
 - **提示**：建议查看【历史更新】，明确具体的【功能内容】
 
 
-### 2026/03/28 - v6.6.0
+### 2026/06/02 - v6.9.0
 
-- **HTML 报告浏览器增强**：在浏览器中打开报告可自动切换宽屏布局，关键词分组和独立展区均支持 Tab 快速切换，搜索框实时过滤新闻标题，邮件客户端仍显示原始窄屏布局，零回归
-- **暗色模式**：一键切换深色主题，自动记住偏好，适合夜间阅读
-- **一键复制新闻**：鼠标悬停新闻序号即可复制标题和链接，方便快速分享
-- **导出优化**：整页截图和分段截图合并为下拉式导出按钮，截图时自动还原干净布局
-- **快捷键系统**：支持 `W` 宽屏切换、`D` 暗色模式、`/` 搜索、`?` 查看快捷键提示
-- **阅读进度条**：页面顶部实时显示阅读进度
+- **热榜域名安全校验**：新增 `expected_domain` 配置项，校验返回数据链接的域名合法性，不匹配时自动丢弃数据并警告，有效防范链接劫持或数据篡改
+- **自定义热榜 API 地址**：支持自部署 newsnow 并配置 `api_url` 使用自己的数据源
 
 ### 2026/02/09 - mcp-v4.0.0
 
@@ -261,6 +261,30 @@
 
 <details>
 <summary>👉 点击展开：<strong>历史更新</strong></summary>
+
+### 2026/05/23 - v6.8.0
+
+- **HTML 报告全面增强**：新增报告元数据展示（生成时间、数据来源、版本号）、暗色模式自动适配、Tab 栏交互优化、趋势箭头可视化，浏览器阅读体验大幅提升
+- **版本检查 CDN 多源回退**：版本检查接口支持 GitHub → jsDelivr → Cloudflare 等多个 CDN 源自动回退，国内网络环境也能稳定获取更新提示
+- **展示区域开关生效**：HTML 报告和邮件现在正确尊重 `display.regions.ai_analysis` 和 `display.regions.standalone` 开关，关闭即不渲染
+- **导出按钮修复**：修复导出按钮点击后下拉菜单图标消失的问题
+- **Markdown 导出修复**：修复 HTML 报告 Markdown 导出中 JS 换行符转义错误
+
+### 2026/05/15 - v6.7.0
+
+- **Markdown 导出**：报告导出下拉菜单新增 Markdown 格式，一键生成带链接的结构化文本，方便 LLM 二次加工和跨平台分享（[#1121](https://github.com/sansan0/TrendRadar/issues/1121)）
+- **RSS guid 去重**：RSS 存储新增 guid 字段，去重优先级改为 guid > url，解决同一文章因 URL 变化导致重复入库的问题
+- **空标题防护**：解析器、渲染层、翻译回填全链路增加空标题兜底逻辑，确保无标题条目也能正常显示
+- **翻译质量增强**：翻译提示词要求保留编号顺序，空翻译结果不再覆盖原始标题
+
+### 2026/03/28 - v6.6.0
+
+- **HTML 报告浏览器增强**：在浏览器中打开报告可自动切换宽屏布局，关键词分组和独立展区均支持 Tab 快速切换，搜索框实时过滤新闻标题，邮件客户端仍显示原始窄屏布局，零回归
+- **暗色模式**：一键切换深色主题，自动记住偏好，适合夜间阅读
+- **一键复制新闻**：鼠标悬停新闻序号即可复制标题和链接，方便快速分享
+- **导出优化**：整页截图和分段截图合并为下拉式导出按钮，截图时自动还原干净布局
+- **快捷键系统**：支持 `W` 宽屏切换、`D` 暗色模式、`/` 搜索、`?` 查看快捷键提示
+- **阅读进度条**：页面顶部实时显示阅读进度
 
 ### 2026/03/12 - v6.5.0
 
