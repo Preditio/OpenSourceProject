@@ -520,6 +520,12 @@ class AIFilter:
             print("[AI筛选] 重分类结果无有效分类")
             return None
 
+        drop_count = sum(
+            len(c["items"]) for c in categories if c["name"] == "__drop__"
+        )
+        if drop_count:
+            print(f"[AI筛选] 重分类：{drop_count} 条被判定为无关杂讯，将剔除不推送")
+
         unassigned = valid_ids - seen_ids
         if unassigned:
             print(f"[AI筛选] 重分类：{len(unassigned)} 条未被 AI 分配，将保留其原分类")

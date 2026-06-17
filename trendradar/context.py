@@ -1177,6 +1177,7 @@ class AppContext:
         new_hotlist: Dict[str, Dict] = {}
         new_rss: Dict[str, Dict] = {}
         assigned: set = set()
+        dropped_count = 0
 
         def _bucket(container: Dict[str, Dict], name: str, position: int, entry: Dict):
             group = container.get(name)
@@ -1189,10 +1190,15 @@ class AppContext:
 
         for position, cat in enumerate(categories):
             name = cat["name"]
+            is_drop = name == "__drop__"
             for iid in cat["items"]:
                 if iid not in id_map or iid in assigned:
                     continue
                 assigned.add(iid)
+                # 被判定为无关杂讯：标记为已处理但不放入任何展示分组（剔除）
+                if is_drop:
+                    dropped_count += 1
+                    continue
                 source_type, entry = id_map[iid]
                 if source_type == "hotlist":
                     _bucket(new_hotlist, name, position, entry)
@@ -1220,7 +1226,8 @@ class AppContext:
             result_hotlist.sort(key=lambda x: (-x["count"], x.get("position", 9999), x["word"]))
             result_rss.sort(key=lambda x: (-x["count"], x.get("position", 9999), x["word"]))
 
-        print(f"[AI筛选] 重分类完成：生成 {len(categories)} 个动态分类（热榜 {len(result_hotlist)} 组 / RSS {len(result_rss)} 组）")
+        named_categories = sum(1 for c in categories if c["name"] != "__drop__")
+        print(f"[AI筛选] 重分类完成：生成 {named_categories} 个动态分类（热榜 {len(result_hotlist)} 组 / RSS {len(result_rss)} 组），剔除无关杂讯 {dropped_count} 条")
         return result_hotlist, result_rss
 
     # === 资源清理 ===
