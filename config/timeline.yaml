@@ -461,8 +461,8 @@ custom:
 
     evening_summary:
       name: "晚间汇总"
-      start: "18:00"               # 北京时间（项目 TIMEZONE）
-      end: "22:00"                 # 4 小时窗口 + 每 2h cron，每天稳定命中 1–2 次，只推送首次
+      start: "17:00"               # 北京时间（项目 TIMEZONE）
+      end: "23:00"                 # 6 小时窗口 + 每 2h cron，抵御 GitHub 定时漂移/丢点，每天稳定命中，去重保证只推首次
       # frequency_file: "xxx.txt"               # 关键词文件（可选，位于 config/custom/keyword/）
       # interests_file: "xxx.txt"                # AI 兴趣文件（可选，位于 config/custom/ai/）
       # filter_method: "keyword"                # 筛选策略（可选: keyword | ai，不填用全局 filter.method）
