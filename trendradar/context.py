@@ -1122,6 +1122,114 @@ class AppContext:
 
         return hotlist_stats, rss_stats
 
+    def recluster_report_stats(
+        self,
+        hotlist_stats: List[Dict],
+        rss_stats: List[Dict],
+    ) -> Tuple[List[Dict], List[Dict]]:
+        """
+        第二段重分类：对最终展示集按真实内容重新聚类并动态命名
+
+        在 convert_ai_filter_to_report_data() 之后调用，输入/输出结构一致
+        （[{word, count, position, titles:[...]}, ...]），仅重写分组与 word 名称。
+        失败或不满足条件时原样返回，保证不破坏既有推送。
+        """
+        filter_config = self.ai_filter_config
+        if not filter_config.get("RECLUSTER_ENABLED", False):
+            return hotlist_stats, rss_stats
+
+        min_items = filter_config.get("RECLUSTER_MIN_ITEMS", 4)
+        max_categories = filter_config.get("RECLUSTER_MAX_CATEGORIES", 8)
+
+        # 扁平化所有 title_entry，记录来源类型与合成 id
+        id_map: Dict[int, Tuple[str, Dict]] = {}
+        ai_items: List[Dict] = []
+        next_id = 0
+        for source_type, stats in (("hotlist", hotlist_stats), ("rss", rss_stats)):
+            for group in stats:
+                old_tag = group.get("word", "")
+                for entry in group.get("titles", []):
+                    id_map[next_id] = (source_type, entry)
+                    ai_items.append({
+                        "id": next_id,
+                        "title": entry.get("title", ""),
+                        "summary": entry.get("summary", ""),
+                        "source": entry.get("source_name", ""),
+                        "old_tag": old_tag,
+                    })
+                    next_id += 1
+
+        if len(ai_items) < min_items:
+            print(f"[AI筛选] 重分类：命中 {len(ai_items)} 条 < 阈值 {min_items}，跳过")
+            return hotlist_stats, rss_stats
+
+        ai_config = self.config.get("AI", {})
+        debug = self.config.get("DEBUG", False)
+        ai_filter = AIFilter(ai_config, filter_config, self.get_time, debug)
+
+        print(f"[AI筛选] 第二段重分类：对 {len(ai_items)} 条展示内容重新聚类...")
+        categories = ai_filter.recluster(ai_items, max_categories=max_categories)
+        if not categories:
+            print("[AI筛选] 重分类失败或无结果，保留第一段分类")
+            return hotlist_stats, rss_stats
+
+        # 按新分类重建分组（保持 AI 给出的分类顺序作为 position；dict 保序）
+        new_hotlist: Dict[str, Dict] = {}
+        new_rss: Dict[str, Dict] = {}
+        assigned: set = set()
+        dropped_count = 0
+
+        def _bucket(container: Dict[str, Dict], name: str, position: int, entry: Dict):
+            group = container.get(name)
+            if group is None:
+                group = {"word": name, "count": 0, "position": position, "titles": []}
+                container[name] = group
+            entry["matched_keyword"] = name
+            group["titles"].append(entry)
+            group["count"] = len(group["titles"])
+
+        for position, cat in enumerate(categories):
+            name = cat["name"]
+            is_drop = name == "__drop__"
+            for iid in cat["items"]:
+                if iid not in id_map or iid in assigned:
+                    continue
+                assigned.add(iid)
+                # 被判定为无关杂讯：标记为已处理但不放入任何展示分组（剔除）
+                if is_drop:
+                    dropped_count += 1
+                    continue
+                source_type, entry = id_map[iid]
+                if source_type == "hotlist":
+                    _bucket(new_hotlist, name, position, entry)
+                else:
+                    _bucket(new_rss, name, position, entry)
+
+        # 兜底：AI 未分配的条目保留其原分类名，排在末尾
+        fallback_position = len(categories)
+        for iid, (source_type, entry) in id_map.items():
+            if iid in assigned:
+                continue
+            name = entry.get("matched_keyword", "其他")
+            if source_type == "hotlist":
+                _bucket(new_hotlist, name, fallback_position, entry)
+            else:
+                _bucket(new_rss, name, fallback_position, entry)
+
+        result_hotlist = list(new_hotlist.values())
+        result_rss = list(new_rss.values())
+
+        if self.ai_priority_sort_enabled:
+            result_hotlist.sort(key=lambda x: (x.get("position", 9999), -x["count"], x["word"]))
+            result_rss.sort(key=lambda x: (x.get("position", 9999), -x["count"], x["word"]))
+        else:
+            result_hotlist.sort(key=lambda x: (-x["count"], x.get("position", 9999), x["word"]))
+            result_rss.sort(key=lambda x: (-x["count"], x.get("position", 9999), x["word"]))
+
+        named_categories = sum(1 for c in categories if c["name"] != "__drop__")
+        print(f"[AI筛选] 重分类完成：生成 {named_categories} 个动态分类（热榜 {len(result_hotlist)} 组 / RSS {len(result_rss)} 组），剔除无关杂讯 {dropped_count} 条")
+        return result_hotlist, result_rss
+
     # === 资源清理 ===
 
     def cleanup(self):

@@ -63,6 +63,12 @@ class AIFilter:
             config_subdir="ai_filter", label="AI筛选",
         )
 
+        # 第二段重分类提示词（two-stage recluster，可选）
+        self.recluster_system, self.recluster_user = load_prompt_template(
+            filter_config.get("RECLUSTER_PROMPT_FILE", "recluster_prompt.txt"),
+            config_subdir="ai_filter", label="AI筛选",
+        )
+
     def compute_interests_hash(self, interests_content: str, filename: str = "ai_interests.txt") -> str:
         """计算兴趣描述的 hash，格式为 filename:md5"""
         # 去除前后空白和注释行，确保内容变化才改变 hash
@@ -388,6 +394,143 @@ class AIFilter:
         except Exception as e:
             print(f"[AI筛选] 分类请求失败: {type(e).__name__}: {e}")
             return []
+
+    def recluster(
+        self,
+        items: List[Dict],
+        max_categories: int = 8,
+    ) -> Optional[List[Dict]]:
+        """
+        第二段重分类：对已筛选的展示集，按真实内容重新聚类并动态命名
+
+        Args:
+            items: [{"id": int, "title": str, "summary": str,
+                     "source": str, "old_tag": str}, ...]
+            max_categories: 动态分类数量上限
+
+        Returns:
+            [{"name": str, "items": [int, ...]}, ...]  按重要性降序
+            失败返回 None（调用方应回退到原分类）
+        """
+        if not items:
+            return None
+
+        if not self.recluster_user:
+            print("[AI筛选] 重分类提示词模板为空，跳过第二段重分类")
+            return None
+
+        def _format_item_line(it: Dict) -> str:
+            line = f"{it['id']} | [{it.get('source', '')}] {it.get('title', '')}"
+            summary = (it.get("summary") or "").strip()
+            if summary:
+                if len(summary) > 160:
+                    summary = summary[:160].rstrip() + "..."
+                line += f" — {summary}"
+            old_tag = (it.get("old_tag") or "").strip()
+            if old_tag:
+                line += f" (旧标签: {old_tag})"
+            return line
+
+        items_list = "\n".join(_format_item_line(it) for it in items)
+
+        user_prompt = self.recluster_user
+        user_prompt = user_prompt.replace("{max_categories}", str(max_categories))
+        user_prompt = user_prompt.replace("{item_count}", str(len(items)))
+        user_prompt = user_prompt.replace("{items_list}", items_list)
+
+        messages = []
+        if self.recluster_system:
+            messages.append({"role": "system", "content": self.recluster_system})
+        messages.append({"role": "user", "content": user_prompt})
+
+        if self.debug:
+            print(f"\n[AI筛选][DEBUG] === 重分类 Prompt (条目数={len(items)}) ===")
+            for m in messages:
+                print(f"[{m['role']}]\n{m['content']}")
+            print(f"[AI筛选][DEBUG] === Prompt 结束 ===")
+
+        try:
+            response = self.client.chat(messages)
+
+            if self.debug:
+                print(f"\n[AI筛选][DEBUG] === 重分类 AI 原始响应 ===")
+                self._print_formatted_json(response)
+                print(f"[AI筛选][DEBUG] === 响应结束 ===")
+
+            return self._parse_recluster_response(response, items)
+        except Exception as e:
+            print(f"[AI筛选] 重分类请求失败: {type(e).__name__}: {e}")
+            return None
+
+    def _parse_recluster_response(
+        self,
+        response: str,
+        items: List[Dict],
+    ) -> Optional[List[Dict]]:
+        """解析重分类响应，校验分类名与 id 分配
+
+        - 每个 id 只能被分配一次（重复出现时仅保留首个分类）
+        - 只接受输入集合内的有效 id
+        - 过滤空名称分类
+        """
+        json_str = self._extract_json(response)
+        if not json_str:
+            print("[AI筛选] 无法从重分类响应中提取 JSON")
+            return None
+
+        try:
+            data = json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"[AI筛选] 重分类 JSON 解析失败: {e}")
+            return None
+
+        raw_categories = data.get("categories", []) if isinstance(data, dict) else []
+        if not raw_categories:
+            print("[AI筛选] 重分类结果为空")
+            return None
+
+        valid_ids = {it["id"] for it in items}
+        seen_ids: set = set()
+        categories: List[Dict] = []
+
+        for cat in raw_categories:
+            if not isinstance(cat, dict):
+                continue
+            name = str(cat.get("name", "")).strip()
+            if not name:
+                continue
+            id_list = cat.get("items", [])
+            if not isinstance(id_list, list):
+                continue
+
+            cleaned_ids = []
+            for raw_id in id_list:
+                try:
+                    iid = int(raw_id)
+                except (ValueError, TypeError):
+                    continue
+                if iid in valid_ids and iid not in seen_ids:
+                    seen_ids.add(iid)
+                    cleaned_ids.append(iid)
+
+            if cleaned_ids:
+                categories.append({"name": name, "items": cleaned_ids})
+
+        if not categories:
+            print("[AI筛选] 重分类结果无有效分类")
+            return None
+
+        drop_count = sum(
+            len(c["items"]) for c in categories if c["name"] == "__drop__"
+        )
+        if drop_count:
+            print(f"[AI筛选] 重分类：{drop_count} 条被判定为无关杂讯，将剔除不推送")
+
+        unassigned = valid_ids - seen_ids
+        if unassigned:
+            print(f"[AI筛选] 重分类：{len(unassigned)} 条未被 AI 分配，将保留其原分类")
+
+        return categories
 
     def _parse_classify_response(
         self,

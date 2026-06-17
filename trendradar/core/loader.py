@@ -347,6 +347,11 @@ def _load_ai_filter_config(config_data: Dict) -> Dict:
         "UPDATE_TAGS_PROMPT_FILE": ai_filter.get("update_tags_prompt_file", "update_tags_prompt.txt"),
         "RECLASSIFY_THRESHOLD": ai_filter.get("reclassify_threshold", 0.6),
         "MIN_SCORE": float(ai_filter.get("min_score", 0)),
+        # 第二段重分类（two-stage recluster）：对最终展示集按真实内容重新聚类并动态命名
+        "RECLUSTER_ENABLED": bool(ai_filter.get("recluster_enabled", False)),
+        "RECLUSTER_PROMPT_FILE": ai_filter.get("recluster_prompt_file", "recluster_prompt.txt"),
+        "RECLUSTER_MAX_CATEGORIES": int(ai_filter.get("recluster_max_categories", 8)),
+        "RECLUSTER_MIN_ITEMS": int(ai_filter.get("recluster_min_items", 4)),
     }
 
 
